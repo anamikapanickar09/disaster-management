@@ -5,6 +5,8 @@ import 'volunteer_screen.dart';
 import '../widgets/custom_button.dart';
 
 class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -15,18 +17,18 @@ class HomeScreen extends StatelessWidget {
           children: [
             CustomButton(
               text: 'Victim Module',
-              onPressed: () => Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => VictimScreen())),
+              onPressed: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => VictimScreen())),
             ),
             CustomButton(
               text: 'Doctor Module',
-              onPressed: () => Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => DoctorScreen())),
+              onPressed: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => DoctorScreen())),
             ),
             CustomButton(
               text: 'Volunteer Module',
-              onPressed: () => Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => VolunteerScreen())),
+              onPressed: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => VolunteerScreen())),
             ),
           ],
         ),

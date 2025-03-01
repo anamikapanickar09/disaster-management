@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class DoctorScreen extends StatelessWidget {
+  const DoctorScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -9,7 +11,8 @@ class DoctorScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('View and respond to medical emergencies.', style: TextStyle(fontSize: 18)),
+            Text('View and respond to medical emergencies.',
+                style: TextStyle(fontSize: 18)),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'user_selection.dart';
-import 'doctor_screen.dart';
-import 'victim_screen.dart';
-import 'volunteer_screen.dart';
+import 'register_doctor.dart';
+import 'register_victim.dart';
+import 'register_volunteer.dart';
+import 'victim_screen.dart'; // Import Victim screen
+import 'doctor_screen.dart'; // Import Doctor screen
+import 'volunteer_screen.dart'; // Import Volunteer screen
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -20,14 +22,14 @@ class _LoginPageState extends State<LoginPage> {
     String password = passwordController.text.trim();
 
     if (username == "doctor") {
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => DoctorScreen()));
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => const DoctorScreen()));
     } else if (username == "victim") {
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => VictimScreen()));
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => const VictimScreen()));
     } else if (username == "volunteer") {
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => VolunteerScreen()));
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (context) => const VolunteerScreen()));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -38,118 +40,136 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  void _navigateToRegistration(String userType) {
+    if (userType == 'Doctor') {
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => RegisterDoctor()));
+    } else if (userType == 'Volunteer') {
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => RegisterVolunteer()));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.deepPurple, // Background color
-      body: Center(
-        child: Padding(
-          padding: EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Title
-              Text(
-                "LOGIN",
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+      backgroundColor: Colors.deepPurple,
+      body: Stack(
+        children: [
+          Positioned(
+            top: 40,
+            right: 20,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
               ),
-              SizedBox(height: 20),
-
-              // Username Field
-              TextField(
-                controller: usernameController,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white.withOpacity(0.2),
-                  hintText: "Username",
-                  hintStyle: TextStyle(color: Colors.white70),
-                  prefixIcon: Icon(Icons.person, color: Colors.white),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-                style: TextStyle(color: Colors.white),
+              child: TextButton(
+                onPressed: () {
+                  showMenu(
+                    context: context,
+                    position: RelativeRect.fromLTRB(
+                        MediaQuery.of(context).size.width - 150, 100, 20, 0),
+                    items: [
+                      PopupMenuItem(
+                        value: 'Doctor',
+                        child: Text("Register as Doctor"),
+                      ),
+                      PopupMenuItem(
+                        value: 'Volunteer',
+                        child: Text("Register as Volunteer"),
+                      ),
+                    ],
+                  ).then((value) {
+                    if (value != null) _navigateToRegistration(value);
+                  });
+                },
+                child: Text("Other User Type",
+                    style: TextStyle(color: Colors.deepPurple)),
               ),
-              SizedBox(height: 15),
-
-              // Password Field
-              TextField(
-                controller: passwordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.white.withOpacity(0.2),
-                  hintText: "Password",
-                  hintStyle: TextStyle(color: Colors.white70),
-                  prefixIcon: Icon(Icons.lock, color: Colors.white),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-                style: TextStyle(color: Colors.white),
-              ),
-              SizedBox(height: 15),
-
-              // Forgot Password
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    // Forgot Password functionality here
-                  },
-                  child: Text("Forgot Password?",
-                      style: TextStyle(color: Colors.white)),
-                ),
-              ),
-
-              // Login Button
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _login,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  child: Text(
-                    "LOGIN",
-                    style: TextStyle(color: Colors.deepPurple, fontSize: 18),
-                  ),
-                ),
-              ),
-
-              SizedBox(height: 20),
-
-              // Sign Up Option
-              Row(
+            ),
+          ),
+          Center(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Don't have an account?",
-                      style: TextStyle(color: Colors.white)),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => UserSelectionPage()));
-                    },
-                    child:
-                        Text("Sign Up", style: TextStyle(color: Colors.white)),
+                  TextField(
+                    controller: usernameController,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.2),
+                      hintText: "Username",
+                      hintStyle: TextStyle(color: Colors.white70),
+                      prefixIcon: Icon(Icons.person, color: Colors.white),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  SizedBox(height: 15),
+                  TextField(
+                    controller: passwordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.2),
+                      hintText: "Password",
+                      hintStyle: TextStyle(color: Colors.white70),
+                      prefixIcon: Icon(Icons.lock, color: Colors.white),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  SizedBox(height: 15),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _login,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: Text(
+                        "LOGIN",
+                        style:
+                            TextStyle(color: Colors.deepPurple, fontSize: 18),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 30),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text("Don't have an account?",
+                          style: TextStyle(color: Colors.white)),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => RegisterVictim()));
+                        },
+                        child: Text("Sign Up",
+                            style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

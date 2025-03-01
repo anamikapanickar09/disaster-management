@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class VictimScreen extends StatelessWidget {
+  const VictimScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -9,7 +11,8 @@ class VictimScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Report incidents and request help here.', style: TextStyle(fontSize: 18)),
+            Text('Report incidents and request help here.',
+                style: TextStyle(fontSize: 18)),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {

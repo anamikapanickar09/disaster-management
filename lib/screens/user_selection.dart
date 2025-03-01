@@ -4,6 +4,8 @@ import 'register_victim.dart';
 import 'register_volunteer.dart';
 
 class UserSelectionPage extends StatelessWidget {
+  const UserSelectionPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -14,19 +16,24 @@ class UserSelectionPage extends StatelessWidget {
           children: [
             ElevatedButton(
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterDoctor()));
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => RegisterDoctor()));
               },
               child: Text("Register as Doctor"),
             ),
             ElevatedButton(
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterVictim()));
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => RegisterVictim()));
               },
               child: Text("Register as Victim"),
             ),
             ElevatedButton(
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterVolunteer()));
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => RegisterVolunteer()));
               },
               child: Text("Register as Volunteer"),
             ),
