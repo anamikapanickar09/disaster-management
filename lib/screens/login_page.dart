@@ -1,12 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // To access Firestore for user type
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'register_doctor.dart';
 import 'register_victim.dart';
 import 'register_volunteer.dart';
-import 'victim_home_page.dart'; // Import Victim screen
-import 'doctor_home_page.dart'; // Import Doctor screen
-import 'volunteer_screen.dart'; // Import Volunteer screen
+import 'victim_home_page.dart';
+import 'doctor_home_page.dart';
+import 'volunteer_home_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -25,23 +25,19 @@ class _LoginPageState extends State<LoginPage> {
     String password = passwordController.text.trim();
 
     try {
-      // Sign in with email and password using Firebase Auth
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: username, // Here, using username as email for simplicity
+        email: username,
         password: password,
       );
 
-      // Fetch the user type from Firestore
       DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users') // Assuming 'users' is the collection
+          .collection('users')
           .doc(userCredential.user!.uid)
           .get();
 
       if (userDoc.exists) {
-        String userType =
-            userDoc['userType']; // Assuming 'userType' field exists
+        String userType = userDoc['userType'];
 
-        // Redirect based on user type
         if (userType == 'doctor') {
           Navigator.pushReplacement(context,
               MaterialPageRoute(builder: (context) => const DoctorHomePage()));
@@ -49,8 +45,10 @@ class _LoginPageState extends State<LoginPage> {
           Navigator.pushReplacement(context,
               MaterialPageRoute(builder: (context) => const VictimHomePage()));
         } else if (userType == 'volunteer') {
-          Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => const VolunteerScreen()));
+          Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const VolunteerHomePage()));
         }
       } else {
         throw 'User type not found in database';
@@ -85,16 +83,16 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.deepPurple,
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
           Positioned(
             top: 40,
             right: 20,
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Colors.grey[900],
                 borderRadius: BorderRadius.circular(20),
               ),
               child: TextButton(
@@ -106,25 +104,37 @@ class _LoginPageState extends State<LoginPage> {
                     items: [
                       PopupMenuItem(
                         value: 'Doctor',
-                        child: Text("Register as Doctor"),
+                        child: Text(
+                          "Register as Doctor",
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                       PopupMenuItem(
                         value: 'Volunteer',
-                        child: Text("Register as Volunteer"),
+                        child: Text(
+                          "Register as Volunteer",
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ],
+                    color: Colors.grey[900], // Dark background for the popup
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
                   ).then((value) {
                     if (value != null) _navigateToRegistration(value);
                   });
                 },
-                child: Text("Other User Type",
-                    style: TextStyle(color: Colors.deepPurple)),
+                child: const Text(
+                  "Other User Type",
+                  style: TextStyle(color: Colors.green),
+                ),
               ),
             ),
           ),
           Center(
             child: Padding(
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -132,59 +142,60 @@ class _LoginPageState extends State<LoginPage> {
                     controller: usernameController,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.2),
+                      fillColor: Colors.grey[850],
                       hintText: "Username (Email)",
-                      hintStyle: TextStyle(color: Colors.white70),
-                      prefixIcon: Icon(Icons.person, color: Colors.white),
+                      hintStyle: const TextStyle(color: Colors.white70),
+                      prefixIcon: const Icon(Icons.person, color: Colors.white),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
                         borderSide: BorderSide.none,
                       ),
                     ),
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                   ),
-                  SizedBox(height: 15),
+                  const SizedBox(height: 15),
                   TextField(
                     controller: passwordController,
                     obscureText: true,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.2),
+                      fillColor: Colors.grey[850],
                       hintText: "Password",
-                      hintStyle: TextStyle(color: Colors.white70),
-                      prefixIcon: Icon(Icons.lock, color: Colors.white),
+                      hintStyle: const TextStyle(color: Colors.white70),
+                      prefixIcon: const Icon(Icons.lock, color: Colors.white),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
                         borderSide: BorderSide.none,
                       ),
                     ),
-                    style: TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.white),
                   ),
-                  SizedBox(height: 15),
+                  const SizedBox(height: 15),
                   SizedBox(
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
                       onPressed: _login,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
+                        backgroundColor: const Color.fromARGB(255, 76, 175, 80),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
                       ),
-                      child: Text(
+                      child: const Text(
                         "LOGIN",
-                        style:
-                            TextStyle(color: Colors.deepPurple, fontSize: 18),
+                        style: TextStyle(color: Colors.white, fontSize: 18),
                       ),
                     ),
                   ),
-                  SizedBox(height: 30),
+                  const SizedBox(height: 30),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("Don't have an account?",
-                          style: TextStyle(color: Colors.white)),
+                      const Text(
+                        "Don't have an account?",
+                        style: TextStyle(color: Colors.white),
+                      ),
                       TextButton(
                         onPressed: () {
                           Navigator.push(
@@ -192,8 +203,10 @@ class _LoginPageState extends State<LoginPage> {
                               MaterialPageRoute(
                                   builder: (context) => RegisterVictim()));
                         },
-                        child: Text("Sign Up",
-                            style: TextStyle(color: Colors.white)),
+                        child: const Text(
+                          "Sign Up",
+                          style: TextStyle(color: Colors.green),
+                        ),
                       ),
                     ],
                   ),

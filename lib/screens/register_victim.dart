@@ -19,7 +19,9 @@ class _RegisterVictimState extends State<RegisterVictim> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  void _register(BuildContext context) async {
+  bool isLoading = false;
+
+  void _register() async {
     String email = emailController.text.trim();
     String emergencyContact = emergencyContactController.text.trim();
     String password = passwordController.text.trim();
@@ -31,15 +33,15 @@ class _RegisterVictimState extends State<RegisterVictim> {
       return;
     }
 
+    setState(() => isLoading = true);
+
     try {
-      // Create user in Firebase Auth
       UserCredential userCredential =
           await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // Save user details in Firestore
       await _firestore.collection('users').doc(userCredential.user!.uid).set({
         'email': email,
         'emergencyContact': emergencyContact,
@@ -68,7 +70,34 @@ class _RegisterVictimState extends State<RegisterVictim> {
           backgroundColor: Colors.red,
         ),
       );
+    } finally {
+      setState(() => isLoading = false);
     }
+  }
+
+  Widget buildInputField({
+    required String label,
+    required TextEditingController controller,
+    bool obscureText = false,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: Colors.white70),
+          border: InputBorder.none,
+        ),
+      ),
+    );
   }
 
   @override
@@ -82,29 +111,49 @@ class _RegisterVictimState extends State<RegisterVictim> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Victim Registration")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: const Text(
+          "Victim Registration",
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(labelText: "Email"),
-            ),
-            TextField(
-              controller: emergencyContactController,
-              decoration: const InputDecoration(labelText: "Emergency Contact"),
-            ),
-            TextField(
+            buildInputField(label: "Email", controller: emailController),
+            buildInputField(
+                label: "Emergency Contact",
+                controller: emergencyContactController),
+            buildInputField(
+              label: "Password",
               controller: passwordController,
               obscureText: true,
-              decoration: const InputDecoration(labelText: "Password"),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => _register(context),
-              child: const Text("Register"),
-            ),
+            isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: Colors.green))
+                : ElevatedButton(
+                    onPressed: _register,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      "Register",
+                      style: TextStyle(fontSize: 18, color: Colors.black),
+                    ),
+                  ),
           ],
         ),
       ),

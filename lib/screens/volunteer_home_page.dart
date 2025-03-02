@@ -6,14 +6,14 @@ import 'map_page.dart';
 import 'notification_page.dart';
 import 'add_camp_page.dart'; // Make sure to create this page
 
-class DoctorHomePage extends StatefulWidget {
-  const DoctorHomePage({super.key});
+class VolunteerHomePage extends StatefulWidget {
+  const VolunteerHomePage({super.key});
 
   @override
-  _DoctorHomePageState createState() => _DoctorHomePageState();
+  _VolunteerHomePageState createState() => _VolunteerHomePageState();
 }
 
-class _DoctorHomePageState extends State<DoctorHomePage> {
+class _VolunteerHomePageState extends State<VolunteerHomePage> {
   bool _isBlinking = true;
 
   @override
@@ -268,7 +268,7 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text(
-          "Doctor Dashboard",
+          "Volunteer Dashboard",
           style: TextStyle(
             color: Colors.green,
             fontSize: 24,

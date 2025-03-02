@@ -22,7 +22,6 @@ class _RegisterDoctorState extends State<RegisterDoctor> {
     setState(() => isLoading = true);
 
     try {
-      // Register the doctor securely with Firebase Auth
       UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
@@ -31,7 +30,6 @@ class _RegisterDoctorState extends State<RegisterDoctor> {
 
       String uid = userCredential.user!.uid;
 
-      // Store additional profile info in Firestore
       await FirebaseFirestore.instance.collection('users').doc(uid).set({
         'email': emailController.text.trim(),
         'phone': phoneController.text.trim(),
@@ -40,10 +38,9 @@ class _RegisterDoctorState extends State<RegisterDoctor> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Doctor registered successfully!')),
+        const SnackBar(content: Text('Doctor registered successfully!')),
       );
 
-      // Go to login page
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginPage()),
@@ -57,37 +54,74 @@ class _RegisterDoctorState extends State<RegisterDoctor> {
     }
   }
 
+  Widget buildInputField(
+      {required String label,
+      required TextEditingController controller,
+      bool obscureText = false}) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: Colors.white70),
+          border: InputBorder.none,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Doctor Registration")),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: const Text(
+          "Doctor Registration",
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-              controller: emailController,
-              decoration: InputDecoration(labelText: "Email"),
-            ),
-            TextField(
-              controller: phoneController,
-              decoration: InputDecoration(labelText: "Phone Number"),
-            ),
-            TextField(
-              controller: doctorIdController,
-              decoration: InputDecoration(labelText: "Doctor ID"),
-            ),
-            TextField(
+            buildInputField(label: "Email", controller: emailController),
+            buildInputField(label: "Phone Number", controller: phoneController),
+            buildInputField(label: "Doctor ID", controller: doctorIdController),
+            buildInputField(
+              label: "Password",
               controller: passwordController,
               obscureText: true,
-              decoration: InputDecoration(labelText: "Password"),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             isLoading
-                ? CircularProgressIndicator()
+                ? const Center(
+                    child: CircularProgressIndicator(color: Colors.green))
                 : ElevatedButton(
                     onPressed: registerDoctor,
-                    child: Text("Register"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      "Register",
+                      style: TextStyle(fontSize: 18, color: Colors.black),
+                    ),
                   ),
           ],
         ),

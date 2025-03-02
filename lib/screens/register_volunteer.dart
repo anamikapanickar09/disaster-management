@@ -1,40 +1,147 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'login_page.dart';
 
-class RegisterVolunteer extends StatelessWidget {
-  final TextEditingController nameController = TextEditingController();
+class RegisterVolunteer extends StatefulWidget {
+  const RegisterVolunteer({super.key});
+
+  @override
+  State<RegisterVolunteer> createState() => _RegisterVolunteerState();
+}
+
+class _RegisterVolunteerState extends State<RegisterVolunteer> {
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
   final TextEditingController volunteerIdController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  RegisterVolunteer({super.key});
+  bool isLoading = false;
 
-  void _register(BuildContext context) {
-    // Add your registration logic
-    Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (context) => LoginPage()));
+  Future<void> _register(BuildContext context) async {
+    setState(() => isLoading = true);
+
+    try {
+      // Create user in Firebase Authentication
+      UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      String uid = userCredential.user!.uid;
+
+      // Store additional volunteer details in Firestore
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'email': emailController.text.trim(),
+        'phone': phoneController.text.trim(),
+        'volunteerId': volunteerIdController.text.trim(),
+        'userType': 'volunteer',
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Volunteer registered successfully!')),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
+    } on FirebaseAuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Registration failed: ${e.message}')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+
+    setState(() => isLoading = false);
+  }
+
+  Widget buildInputField({
+    required String label,
+    required TextEditingController controller,
+    bool obscureText = false,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscureText,
+        keyboardType: keyboardType,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: Colors.white70),
+          border: InputBorder.none,
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Volunteer Registration")),
-      body: Padding(
-        padding: EdgeInsets.all(16.0),
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: const Text(
+          "Volunteer Registration",
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-                controller: nameController,
-                decoration: InputDecoration(labelText: "Name")),
-            TextField(
-                controller: volunteerIdController,
-                decoration: InputDecoration(labelText: "Volunteer ID")),
-            TextField(
-                controller: passwordController,
-                obscureText: true,
-                decoration: InputDecoration(labelText: "Password")),
-            SizedBox(height: 20),
-            ElevatedButton(
-                onPressed: () => _register(context), child: Text("Register")),
+            buildInputField(
+              label: "Email",
+              controller: emailController,
+              keyboardType: TextInputType.emailAddress,
+            ),
+            buildInputField(
+              label: "Phone Number",
+              controller: phoneController,
+              keyboardType: TextInputType.phone,
+            ),
+            buildInputField(
+                label: "Volunteer ID", controller: volunteerIdController),
+            buildInputField(
+              label: "Password",
+              controller: passwordController,
+              obscureText: true,
+            ),
+            const SizedBox(height: 20),
+            isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: Colors.green),
+                  )
+                : ElevatedButton(
+                    onPressed: () => _register(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      "Register",
+                      style: TextStyle(fontSize: 18, color: Colors.black),
+                    ),
+                  ),
           ],
         ),
       ),

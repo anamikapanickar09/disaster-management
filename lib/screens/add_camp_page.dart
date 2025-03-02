@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 class AddCampPage extends StatefulWidget {
   const AddCampPage({super.key});
@@ -10,102 +10,90 @@ class AddCampPage extends StatefulWidget {
 }
 
 class _AddCampPageState extends State<AddCampPage> {
-  final TextEditingController _campNameController = TextEditingController();
-  final TextEditingController _locationController = TextEditingController();
-  final TextEditingController _capacityController = TextEditingController();
-  final TextEditingController _contactController = TextEditingController();
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final TextEditingController _detailsController = TextEditingController();
+  bool _isSubmitting = false;
 
-  Future<void> _addCamp() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
+  Future<void> _submitCampDetails() async {
+    setState(() => _isSubmitting = true);
+
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw "Location permission denied.";
+        }
+      }
+      if (permission == LocationPermission.deniedForever) {
+        throw "Location permissions are permanently denied.";
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      await FirebaseFirestore.instance.collection('camps').add({
+        'comment': _detailsController.text,
+        'latitude': position.latitude,
+        'longitude': position.longitude,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✅ Camp details added!')),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ Error: $e')),
+      );
+    } finally {
+      setState(() => _isSubmitting = false);
     }
-    await FirebaseFirestore.instance.collection('camps').add({
-      'name': _campNameController.text,
-      'location': _locationController.text,
-      'capacity': int.tryParse(_capacityController.text) ?? 0,
-      'contact': _contactController.text,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Camp added successfully')),
-    );
-    Navigator.pop(context);
-  }
-
-  Future<List<String>> _getLocationSuggestions(String query) async {
-    List<String> locations = [
-      "Relief Camp 1",
-      "Disaster Relief Zone",
-      "Temporary Shelter 3",
-    ];
-    return locations
-        .where(
-            (location) => location.toLowerCase().contains(query.toLowerCase()))
-        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Add Camp Details"),
-        backgroundColor: Colors.green,
+        title: const Text("Add Camp Details",
+            style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(
+            color: Colors.white), // <-- This makes the back button white
+        centerTitle: true,
       ),
+      backgroundColor: Colors.black,
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              TextFormField(
-                controller: _campNameController,
-                decoration: const InputDecoration(labelText: "Camp Name"),
-                validator: (value) =>
-                    value!.isEmpty ? 'Please enter a camp name' : null,
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            const Text(
+              "Enter details about the camp location.",
+              style: TextStyle(color: Colors.white70, fontSize: 18),
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _detailsController,
+              decoration: const InputDecoration(
+                labelText: "Camp Details",
+                labelStyle: TextStyle(color: Colors.white),
+                border: OutlineInputBorder(),
+                filled: true,
+                fillColor: Colors.grey,
               ),
-              const SizedBox(height: 10),
-              TypeAheadFormField<String>(
-                textFieldConfiguration: TextFieldConfiguration(
-                  controller: _locationController,
-                  decoration: const InputDecoration(labelText: "Location"),
-                ),
-                suggestionsCallback: (pattern) async {
-                  return await _getLocationSuggestions(pattern);
-                },
-                itemBuilder: (context, String suggestion) {
-                  return ListTile(title: Text(suggestion));
-                },
-                onSuggestionSelected: (String suggestion) {
-                  _locationController.text = suggestion;
-                },
-                validator: (value) =>
-                    value!.isEmpty ? 'Please enter or select a location' : null,
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _capacityController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: "Capacity"),
-                validator: (value) =>
-                    value!.isEmpty ? 'Please enter capacity' : null,
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _contactController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(labelText: "Contact Number"),
-                validator: (value) =>
-                    value!.isEmpty ? 'Please enter a contact number' : null,
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _addCamp,
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                child: const Text("Save Camp"),
-              ),
-            ],
-          ),
+              style: const TextStyle(color: Colors.white),
+              maxLines: 5,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _isSubmitting ? null : _submitCampDetails,
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              child: _isSubmitting
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text("Submit"),
+            ),
+          ],
         ),
       ),
     );

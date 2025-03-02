@@ -71,18 +71,35 @@ class _VictimHomePageState extends State<VictimHomePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Emergency Alert"),
+          backgroundColor: Colors.grey[900], // Dark background
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            "Emergency Alert",
+            style: TextStyle(color: Colors.white),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text("Send an emergency alert to other users."),
+              const Text(
+                "Send an emergency alert to other users.",
+                style: TextStyle(color: Colors.white70),
+              ),
               const SizedBox(height: 10),
               TextField(
                 controller: commentController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.grey[800],
                   labelText: "Emergency Comments",
-                  border: OutlineInputBorder(),
+                  labelStyle: const TextStyle(color: Colors.white70),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
+                style: const TextStyle(color: Colors.white),
                 maxLines: 3,
               ),
             ],
@@ -90,7 +107,10 @@ class _VictimHomePageState extends State<VictimHomePage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
+              child: const Text(
+                "Cancel",
+                style: TextStyle(color: Colors.white70),
+              ),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -99,7 +119,12 @@ class _VictimHomePageState extends State<VictimHomePage> {
                   Navigator.pop(context);
                 }
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
               child: const Text("Send Alert"),
             ),
           ],
