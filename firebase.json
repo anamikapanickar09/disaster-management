@@ -1,1 +1,71 @@
-{"emulators":{"dataconnect":{"dataDir":"dataconnect/.dataconnect/pgliteData"}},"dataconnect":{"source":"dataconnect"},"firestore":{"rules":"firestore.rules","indexes":"firestore.indexes.json"},"hosting":{"public":"public","ignore":["firebase.json","**/.*","**/node_modules/**"]},"storage":{"rules":"storage.rules"},"database":{"rules":"database.rules.json"},"flutter":{"platforms":{"android":{"default":{"projectId":"disastermanagementapp-b5d15","appId":"1:433033604007:android:f7fd69ada51088c35ca482","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"disastermanagementapp-b5d15","configurations":{"android":"1:433033604007:android:f7fd69ada51088c35ca482","ios":"1:433033604007:ios:dd8de47e609840685ca482","macos":"1:433033604007:ios:dd8de47e609840685ca482","web":"1:433033604007:web:cd980d0addfa8ddc5ca482","windows":"1:433033604007:web:a2eecb653cb7e0195ca482"}}}}}}
+{
+  "emulators": {
+    "dataconnect": {
+      "dataDir": "dataconnect/.dataconnect/pgliteData",
+      "port": 9399
+    },
+    "auth": {
+      "port": 9099
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "database": {
+      "port": 9000
+    },
+    "hosting": {
+      "port": 5000
+    },
+    "ui": {
+      "enabled": true
+    },
+    "singleProjectMode": true
+  },
+  "dataconnect": {
+    "source": "dataconnect"
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "database": {
+    "rules": "database.rules.json"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "disastermanagementapp-b5d15",
+          "appId": "1:433033604007:android:f7fd69ada51088c35ca482",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "disastermanagementapp-b5d15",
+          "configurations": {
+            "android": "1:433033604007:android:f7fd69ada51088c35ca482",
+            "ios": "1:433033604007:ios:dd8de47e609840685ca482",
+            "macos": "1:433033604007:ios:dd8de47e609840685ca482",
+            "web": "1:433033604007:web:cd980d0addfa8ddc5ca482",
+            "windows": "1:433033604007:web:a2eecb653cb7e0195ca482"
+          }
+        }
+      }
+    }
+  }
+}

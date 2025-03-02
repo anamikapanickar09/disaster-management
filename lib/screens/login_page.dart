@@ -1,8 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // To access Firestore for user type
 import 'package:flutter/material.dart';
 import 'register_doctor.dart';
 import 'register_victim.dart';
 import 'register_volunteer.dart';
-import 'victim_screen.dart'; // Import Victim screen
+import 'victim_home_page.dart'; // Import Victim screen
 import 'doctor_screen.dart'; // Import Doctor screen
 import 'volunteer_screen.dart'; // Import Volunteer screen
 
@@ -16,24 +18,54 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  void _login() {
+  void _login() async {
     String username = usernameController.text.trim();
     String password = passwordController.text.trim();
 
-    if (username == "doctor") {
-      Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (context) => const DoctorScreen()));
-    } else if (username == "victim") {
-      Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (context) => const VictimScreen()));
-    } else if (username == "volunteer") {
-      Navigator.pushReplacement(context,
-          MaterialPageRoute(builder: (context) => const VolunteerScreen()));
-    } else {
+    try {
+      // Sign in with email and password using Firebase Auth
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: username, // Here, using username as email for simplicity
+        password: password,
+      );
+
+      // Fetch the user type from Firestore
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users') // Assuming 'users' is the collection
+          .doc(userCredential.user!.uid)
+          .get();
+
+      if (userDoc.exists) {
+        String userType =
+            userDoc['userType']; // Assuming 'userType' field exists
+
+        // Redirect based on user type
+        if (userType == 'doctor') {
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => const DoctorScreen()));
+        } else if (userType == 'victim') {
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => const VictimHomePage()));
+        } else if (userType == 'volunteer') {
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => const VolunteerScreen()));
+        }
+      } else {
+        throw 'User type not found in database';
+      }
+    } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("Invalid credentials"),
+          content: Text("Login failed: ${e.message}"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error: $e"),
           backgroundColor: Colors.red,
         ),
       );
@@ -101,7 +133,7 @@ class _LoginPageState extends State<LoginPage> {
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Colors.white.withOpacity(0.2),
-                      hintText: "Username",
+                      hintText: "Username (Email)",
                       hintStyle: TextStyle(color: Colors.white70),
                       prefixIcon: Icon(Icons.person, color: Colors.white),
                       border: OutlineInputBorder(

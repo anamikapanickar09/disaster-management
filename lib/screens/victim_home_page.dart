@@ -1,8 +1,50 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:location/location.dart';
 import 'map_page.dart';
+import 'notification_page.dart';
 
-class VictimHomePage extends StatelessWidget {
+class VictimHomePage extends StatefulWidget {
   const VictimHomePage({super.key});
+
+  @override
+  _VictimHomePageState createState() => _VictimHomePageState();
+}
+
+class _VictimHomePageState extends State<VictimHomePage> {
+  bool _isBlinking = true;
+
+  @override
+  void initState() {
+    super.initState();
+    Timer.periodic(Duration(milliseconds: 500), (timer) {
+      if (!mounted) return;
+      setState(() {
+        _isBlinking = !_isBlinking;
+      });
+    });
+  }
+
+  Future<void> sendEmergencyAlert(String comment) async {
+    Location location = Location();
+    bool serviceEnabled = await location.serviceEnabled();
+    if (!serviceEnabled) serviceEnabled = await location.requestService();
+    PermissionStatus permission = await location.hasPermission();
+    if (permission == PermissionStatus.denied) {
+      permission = await location.requestPermission();
+    }
+    if (permission != PermissionStatus.granted) return;
+
+    var currentLocation = await location.getLocation();
+
+    await FirebaseFirestore.instance.collection('alerts').add({
+      'comment': comment,
+      'latitude': currentLocation.latitude,
+      'longitude': currentLocation.longitude,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+  }
 
   void _showEmergencyAlert(BuildContext context) {
     TextEditingController commentController = TextEditingController();
@@ -32,9 +74,11 @@ class VictimHomePage extends StatelessWidget {
               child: Text("Cancel"),
             ),
             ElevatedButton(
-              onPressed: () {
-                // Handle alert sending logic
-                Navigator.pop(context);
+              onPressed: () async {
+                if (commentController.text.isNotEmpty) {
+                  await sendEmergencyAlert(commentController.text);
+                  Navigator.pop(context);
+                }
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
               child: Text("Send Alert"),
@@ -55,56 +99,52 @@ class VictimHomePage extends StatelessWidget {
           IconButton(
             icon: Icon(Icons.notifications, color: Colors.white),
             onPressed: () {
-              // Handle notifications
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => NotificationPage()),
+              );
             },
           ),
         ],
       ),
       body: Column(
         children: [
-          Expanded(
-            child: GridView.count(
-              crossAxisCount: 2,
-              padding: EdgeInsets.all(16),
-              children: [
-                _buildFeatureBox(
-                  title: "Map View",
-                  icon: Icons.map,
-                  color: Colors.blue,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => MapPage()),
-                    );
-                  },
-                ),
-                _buildFeatureBox(
-                  title: "Alert",
-                  icon: Icons.warning,
-                  color: Colors.red,
-                  onTap: () => _showEmergencyAlert(context),
-                  blinking: true,
-                ),
-                _buildFeatureBox(
-                  title: "GPT Help",
-                  icon: Icons.help,
-                  color: Colors.green,
-                  onTap: () {
-                    // Handle AI help feature
-                  },
-                ),
-              ],
-            ),
+          SizedBox(height: 20),
+          _buildFeatureBox(
+            title: "Map View",
+            icon: Icons.map,
+            color: Colors.blue,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => MapPage()),
+              );
+            },
           ),
+          SizedBox(height: 16),
+          _buildFeatureBox(
+            title: "Alert",
+            icon: Icons.warning,
+            color: _isBlinking ? Colors.red : Colors.red.withOpacity(0.4),
+            onTap: () => _showEmergencyAlert(context),
+          ),
+          SizedBox(height: 16),
+          _buildFeatureBox(
+            title: "GPT Help",
+            icon: Icons.help,
+            color: Colors.green,
+            onTap: () {},
+          ),
+          Spacer(),
           Padding(
             padding: EdgeInsets.all(16),
             child: Column(
               children: [
                 Text(
                   "Emergency Contacts",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 10),
+                SizedBox(height: 5),
                 _contactRow("Fire Department", "101"),
                 _contactRow("Ambulance", "102"),
                 _contactRow("Police", "100"),
@@ -122,14 +162,15 @@ class VictimHomePage extends StatelessWidget {
     required IconData icon,
     required Color color,
     required VoidCallback onTap,
-    bool blinking = false,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: EdgeInsets.all(8),
+        width: MediaQuery.of(context).size.width * 0.9,
+        height: 100,
+        margin: EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
-          color: blinking ? Colors.red.withOpacity(0.5) : color,
+          color: color,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -139,16 +180,14 @@ class VictimHomePage extends StatelessWidget {
             ),
           ],
         ),
-        child: Stack(
-          alignment: Alignment.center,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 50, color: Colors.white),
-            Positioned(
-              bottom: 8,
-              child: Text(
-                title,
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
+            Icon(icon, size: 40, color: Colors.white),
+            SizedBox(width: 16),
+            Text(
+              title,
+              style: TextStyle(color: Colors.white, fontSize: 18),
             ),
           ],
         ),
@@ -158,13 +197,13 @@ class VictimHomePage extends StatelessWidget {
 
   Widget _contactRow(String title, String number) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 5),
+      padding: EdgeInsets.symmetric(vertical: 3),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: TextStyle(fontSize: 16)),
+          Text(title, style: TextStyle(fontSize: 12)),
           Text(number,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
         ],
       ),
     );
