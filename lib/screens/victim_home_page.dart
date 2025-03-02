@@ -18,7 +18,7 @@ class _VictimHomePageState extends State<VictimHomePage> {
   @override
   void initState() {
     super.initState();
-    Timer.periodic(Duration(milliseconds: 500), (timer) {
+    Timer.periodic(const Duration(milliseconds: 500), (timer) {
       if (!mounted) return;
       setState(() {
         _isBlinking = !_isBlinking;
@@ -52,15 +52,15 @@ class _VictimHomePageState extends State<VictimHomePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Emergency Alert"),
+          title: const Text("Emergency Alert"),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text("Send an emergency alert to other users."),
-              SizedBox(height: 10),
+              const Text("Send an emergency alert to other users."),
+              const SizedBox(height: 10),
               TextField(
                 controller: commentController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: "Emergency Comments",
                   border: OutlineInputBorder(),
                 ),
@@ -71,7 +71,7 @@ class _VictimHomePageState extends State<VictimHomePage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text("Cancel"),
+              child: const Text("Cancel"),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -81,7 +81,7 @@ class _VictimHomePageState extends State<VictimHomePage> {
                 }
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: Text("Send Alert"),
+              child: const Text("Send Alert"),
             ),
           ],
         );
@@ -92,12 +92,22 @@ class _VictimHomePageState extends State<VictimHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text("Disaster Response"),
-        backgroundColor: Colors.deepPurple,
+        title: const Text(
+          "Disaster Response",
+          style: TextStyle(
+            color: Colors.green,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: Colors.black,
+        elevation: 0,
+        centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(Icons.notifications, color: Colors.white),
+            icon: const Icon(Icons.notifications, color: Colors.white),
             onPressed: () {
               Navigator.push(
                 context,
@@ -107,52 +117,48 @@ class _VictimHomePageState extends State<VictimHomePage> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          SizedBox(height: 20),
-          _buildFeatureBox(
-            title: "Map View",
-            icon: Icons.map,
-            color: Colors.blue,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => MapPage()),
-              );
-            },
-          ),
-          SizedBox(height: 16),
-          _buildFeatureBox(
-            title: "Alert",
-            icon: Icons.warning,
-            color: _isBlinking ? Colors.red : Colors.red.withOpacity(0.4),
-            onTap: () => _showEmergencyAlert(context),
-          ),
-          SizedBox(height: 16),
-          _buildFeatureBox(
-            title: "GPT Help",
-            icon: Icons.help,
-            color: Colors.green,
-            onTap: () {},
-          ),
-          Spacer(),
-          Padding(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              children: [
-                Text(
-                  "Emergency Contacts",
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 5),
-                _contactRow("Fire Department", "101"),
-                _contactRow("Ambulance", "102"),
-                _contactRow("Police", "100"),
-                _contactRow("Disaster Helpline", "108"),
-              ],
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Expanded(
+              child: _buildFeatureBox(
+                title: "Map View",
+                icon: Icons.map,
+                iconColor: Colors.blue,
+                textColor: Colors.blue,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => MapPage()),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            Expanded(
+              child: _buildFeatureBox(
+                title: "Alert",
+                icon: Icons.warning,
+                iconColor: _isBlinking ? Colors.red : Colors.transparent,
+                textColor: Colors.red,
+                onTap: () => _showEmergencyAlert(context),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: _buildFeatureBox(
+                title: "GPT Help",
+                icon: Icons.help,
+                iconColor: Colors.green,
+                textColor: Colors.green,
+                onTap: () {},
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildEmergencyContactsBox(),
+          ],
+        ),
       ),
     );
   }
@@ -160,50 +166,90 @@ class _VictimHomePageState extends State<VictimHomePage> {
   Widget _buildFeatureBox({
     required String title,
     required IconData icon,
-    required Color color,
+    required Color iconColor,
+    required Color textColor,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.9,
-        height: 100,
-        margin: EdgeInsets.symmetric(horizontal: 10),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(
-          color: color,
+          color: Colors.grey[900],
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black26,
-              blurRadius: 6,
-              offset: Offset(0, 2),
-            ),
-          ],
         ),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 40, color: Colors.white),
-            SizedBox(width: 16),
-            Text(
-              title,
-              style: TextStyle(color: Colors.white, fontSize: 18),
+            Icon(icon, size: 40, color: iconColor),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 26,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
+            const Icon(Icons.arrow_forward_ios, color: Colors.green, size: 22),
           ],
         ),
       ),
     );
   }
 
-  Widget _contactRow(String title, String number) {
+  Widget _buildEmergencyContactsBox() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[900],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Emergency Contacts",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _buildContactRow("Fire Department", "101"),
+          _buildContactRow("Ambulance", "102"),
+          _buildContactRow("Police", "100"),
+          _buildContactRow("Disaster Helpline", "108"),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildContactRow(String name, String number) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: TextStyle(fontSize: 12)),
-          Text(number,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+          Text(
+            name,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 16,
+            ),
+          ),
+          Text(
+            number,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );

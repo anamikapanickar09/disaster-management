@@ -5,7 +5,7 @@ import 'register_doctor.dart';
 import 'register_victim.dart';
 import 'register_volunteer.dart';
 import 'victim_home_page.dart'; // Import Victim screen
-import 'doctor_screen.dart'; // Import Doctor screen
+import 'doctor_home_page.dart'; // Import Doctor screen
 import 'volunteer_screen.dart'; // Import Volunteer screen
 
 class LoginPage extends StatefulWidget {
@@ -44,7 +44,7 @@ class _LoginPageState extends State<LoginPage> {
         // Redirect based on user type
         if (userType == 'doctor') {
           Navigator.pushReplacement(context,
-              MaterialPageRoute(builder: (context) => const DoctorScreen()));
+              MaterialPageRoute(builder: (context) => const DoctorHomePage()));
         } else if (userType == 'victim') {
           Navigator.pushReplacement(context,
               MaterialPageRoute(builder: (context) => const VictimHomePage()));
