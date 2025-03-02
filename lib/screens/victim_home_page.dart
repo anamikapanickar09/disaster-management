@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:location/location.dart';
+import 'package:geolocator/geolocator.dart';
 import 'map_page.dart';
 import 'notification_page.dart';
 
@@ -27,23 +27,42 @@ class _VictimHomePageState extends State<VictimHomePage> {
   }
 
   Future<void> sendEmergencyAlert(String comment) async {
-    Location location = Location();
-    bool serviceEnabled = await location.serviceEnabled();
-    if (!serviceEnabled) serviceEnabled = await location.requestService();
-    PermissionStatus permission = await location.hasPermission();
-    if (permission == PermissionStatus.denied) {
-      permission = await location.requestPermission();
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          print("❌ Location permission denied.");
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        print("❌ Location permissions are permanently denied.");
+        return;
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      await FirebaseFirestore.instance.collection('alerts').add({
+        'comment': comment,
+        'latitude': position.latitude,
+        'longitude': position.longitude,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      print("✅ Emergency alert sent successfully.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Emergency alert sent!')),
+      );
+    } catch (e) {
+      print("❌ Error sending emergency alert: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error sending alert: $e')),
+      );
     }
-    if (permission != PermissionStatus.granted) return;
-
-    var currentLocation = await location.getLocation();
-
-    await FirebaseFirestore.instance.collection('alerts').add({
-      'comment': comment,
-      'latitude': currentLocation.latitude,
-      'longitude': currentLocation.longitude,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
   }
 
   void _showEmergencyAlert(BuildContext context) {
@@ -95,7 +114,7 @@ class _VictimHomePageState extends State<VictimHomePage> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text(
-          "Disaster Response",
+          "Crisis Connect",
           style: TextStyle(
             color: Colors.green,
             fontSize: 24,
