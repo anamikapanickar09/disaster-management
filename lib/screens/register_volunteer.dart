@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'login_page.dart';
 
 class RegisterVolunteer extends StatefulWidget {
   const RegisterVolunteer({super.key});
 
   @override
-  State<RegisterVolunteer> createState() => _RegisterVolunteerState();
+  _RegisterVolunteerState createState() => _RegisterVolunteerState();
 }
 
 class _RegisterVolunteerState extends State<RegisterVolunteer> {
@@ -18,11 +18,10 @@ class _RegisterVolunteerState extends State<RegisterVolunteer> {
 
   bool isLoading = false;
 
-  Future<void> _register(BuildContext context) async {
+  Future<void> registerVolunteer() async {
     setState(() => isLoading = true);
 
     try {
-      // Create user in Firebase Authentication
       UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
@@ -31,7 +30,6 @@ class _RegisterVolunteerState extends State<RegisterVolunteer> {
 
       String uid = userCredential.user!.uid;
 
-      // Store additional volunteer details in Firestore
       await FirebaseFirestore.instance.collection('users').doc(uid).set({
         'email': emailController.text.trim(),
         'phone': phoneController.text.trim(),
@@ -45,27 +43,21 @@ class _RegisterVolunteerState extends State<RegisterVolunteer> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
-    } on FirebaseAuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Registration failed: ${e.message}')),
+        MaterialPageRoute(builder: (context) => LoginPage()),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(content: Text('Registration failed: $e')),
       );
+    } finally {
+      setState(() => isLoading = false);
     }
-
-    setState(() => isLoading = false);
   }
 
-  Widget buildInputField({
-    required String label,
-    required TextEditingController controller,
-    bool obscureText = false,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
+  Widget buildInputField(
+      {required String label,
+      required TextEditingController controller,
+      bool obscureText = false}) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 10),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
@@ -76,7 +68,6 @@ class _RegisterVolunteerState extends State<RegisterVolunteer> {
       child: TextField(
         controller: controller,
         obscureText: obscureText,
-        keyboardType: keyboardType,
         style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
           labelText: label,
@@ -106,16 +97,8 @@ class _RegisterVolunteerState extends State<RegisterVolunteer> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            buildInputField(
-              label: "Email",
-              controller: emailController,
-              keyboardType: TextInputType.emailAddress,
-            ),
-            buildInputField(
-              label: "Phone Number",
-              controller: phoneController,
-              keyboardType: TextInputType.phone,
-            ),
+            buildInputField(label: "Email", controller: emailController),
+            buildInputField(label: "Phone Number", controller: phoneController),
             buildInputField(
                 label: "Volunteer ID", controller: volunteerIdController),
             buildInputField(
@@ -126,10 +109,9 @@ class _RegisterVolunteerState extends State<RegisterVolunteer> {
             const SizedBox(height: 20),
             isLoading
                 ? const Center(
-                    child: CircularProgressIndicator(color: Colors.green),
-                  )
+                    child: CircularProgressIndicator(color: Colors.green))
                 : ElevatedButton(
-                    onPressed: () => _register(context),
+                    onPressed: registerVolunteer,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       padding: const EdgeInsets.symmetric(vertical: 16),

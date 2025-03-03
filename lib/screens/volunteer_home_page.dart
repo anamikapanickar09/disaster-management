@@ -411,9 +411,8 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
             "Police: 100\n"
             "Ambulance: 102\n"
             "Fire Brigade: 101\n"
-            "Volunteer 1 (John): +91 98765 43210\n"
-            "Volunteer 2 (Emma): +91 91234 56789\n"
-            "Volunteer 3 (Raj): +91 99887 76655",
+            "Medical Team Lead (John): +91 98765 43210\n"
+            "Doctor (Emma): +91 91234 56789\n",
             style: TextStyle(
               color: Colors.white70,
               fontSize: 16,
