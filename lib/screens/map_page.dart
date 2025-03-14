@@ -3,6 +3,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:location/location.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
+import 'package:geocoding/geocoding.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -15,6 +17,8 @@ class _MapPageState extends State<MapPage> {
   List<Marker> markers = [];
   final MapController _mapController = MapController();
   LatLng? userLocation;
+  TextEditingController searchController = TextEditingController();
+  List<Map<String, dynamic>> placesList = [];
 
   @override
   void initState() {
@@ -23,11 +27,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   void fetchMapData() {
-    // Fetch Alerts (Red markers)
-    FirebaseFirestore.instance
-        .collection('alerts')
-        .snapshots()
-        .listen((snapshot) {
+    FirebaseFirestore.instance.collection('alerts').snapshots().listen((snapshot) {
       List<Marker> alertMarkers = snapshot.docs.map((doc) {
         final data = doc.data();
         final comment = data['comment'] ?? "No comment";
@@ -45,11 +45,7 @@ class _MapPageState extends State<MapPage> {
         );
       }).toList();
 
-      // Fetch Camps (Green markers)
-      FirebaseFirestore.instance
-          .collection('camps')
-          .snapshots()
-          .listen((snapshot) {
+      FirebaseFirestore.instance.collection('camps').snapshots().listen((snapshot) {
         List<Marker> campMarkers = snapshot.docs.map((doc) {
           final data = doc.data();
           final comment = data['comment'] ?? "No comment";
@@ -62,14 +58,14 @@ class _MapPageState extends State<MapPage> {
             point: LatLng(latitude, longitude),
             child: GestureDetector(
               onTap: () => _showInfoDialog("Camp Location", comment),
-              child:
-                  const Icon(Icons.location_on, color: Colors.green, size: 40),
+              child: const Icon(Icons.local_hospital, color: Colors.blue, size: 40),
             ),
           );
         }).toList();
 
         setState(() {
           markers = [...alertMarkers, ...campMarkers]; // Combine both markers
+          updatePlacesList();
         });
 
         if (markers.isNotEmpty) zoomToNearestMarker();
@@ -77,10 +73,37 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
+  void updatePlacesList() {
+    placesList = markers.map((marker) {
+      return {
+        'name': "Marker at (${marker.point.latitude}, ${marker.point.longitude})",
+        'location': marker.point
+      };
+    }).toList();
+  }
+
   void zoomToNearestMarker() {
     if (markers.isEmpty) return;
     LatLng nearestMarker = markers.first.point;
     _mapController.move(nearestMarker, 15.0);
+  }
+
+  Future<void> searchLocation(String query) async {
+    try {
+      List<Location> locations = await locationFromAddress(query);
+      if (locations.isNotEmpty) {
+        LatLng searchedLocation = LatLng(locations.first.latitude, locations.first.longitude);
+        _mapController.move(searchedLocation, 15.0);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Location not found!")),
+      );
+    }
+  }
+
+  void zoomToMarker(LatLng location) {
+    _mapController.move(location, 15.0);
   }
 
   Future<void> requestLocationAccess() async {
@@ -121,9 +144,7 @@ class _MapPageState extends State<MapPage> {
         title: Text(title),
         content: Text(content),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Close")),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Close")),
         ],
       ),
     );
@@ -137,24 +158,57 @@ class _MapPageState extends State<MapPage> {
         backgroundColor: Colors.black,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: GestureDetector(
-        onTap: requestLocationAccess,
-        child: FlutterMap(
-          mapController: _mapController,
-          options: MapOptions(
-            initialCenter:
-                markers.isNotEmpty ? markers.first.point : LatLng(10.0, 76.0),
-            initialZoom: 10.0,
-          ),
-          children: [
-            TileLayer(
-              urlTemplate:
-                  "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png",
-              subdomains: ['a', 'b', 'c'],
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TypeAheadField<Map<String, dynamic>>(
+              textFieldConfiguration: TextFieldConfiguration(
+                controller: searchController,
+                decoration: InputDecoration(
+                  labelText: "Search Places & Markers",
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+              suggestionsCallback: (pattern) {
+                return placesList.where((place) =>
+                    place['name'].toLowerCase().contains(pattern.toLowerCase()));
+              },
+              itemBuilder: (context, Map<String, dynamic> suggestion) {
+                return ListTile(
+                  leading: const Icon(Icons.location_on, color: Colors.blue),
+                  title: Text(suggestion['name']),
+                );
+              },
+              onSuggestionSelected: (Map<String, dynamic> suggestion) {
+                searchController.text = suggestion['name'];
+                zoomToMarker(suggestion['location']);
+              },
             ),
-            MarkerLayer(markers: markers),
-          ],
-        ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: requestLocationAccess,
+              child: FlutterMap(
+                mapController: _mapController,
+                options: MapOptions(
+                  initialCenter:
+                      markers.isNotEmpty ? markers.first.point : LatLng(10.0, 76.0),
+                  initialZoom: 10.0,
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png",
+                    subdomains: ['a', 'b', 'c'],
+                  ),
+                  MarkerLayer(markers: markers),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
