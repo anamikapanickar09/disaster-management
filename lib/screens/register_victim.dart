@@ -114,7 +114,7 @@ class _RegisterVictimState extends State<RegisterVictim> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text(
-          "Victim Registration",
+          "User Registration",
           style: TextStyle(color: Colors.white),
         ),
         backgroundColor: Colors.black,
