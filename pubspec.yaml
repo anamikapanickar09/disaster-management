@@ -17,8 +17,7 @@ dependencies:
   cloud_firestore: ^5.6.5
 
   # Notifications
-  flutter_local_notifications: ^17.0.0
-
+  flutter_local_notifications: ^16.1.0
 
   # Geolocation
   geolocator: ^11.0.0
