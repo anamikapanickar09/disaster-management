@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'map_page.dart';
 import 'notification_page.dart';
+import 'login_page.dart';
 import 'add_camp_page.dart'; // Make sure to create this page
 
 class DoctorHomePage extends StatefulWidget {
@@ -270,7 +271,7 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
         title: const Text(
           "Doctor Dashboard",
           style: TextStyle(
-            color: Colors.green,
+            color: Color.fromRGBO(76, 175, 80, 1),
             fontSize: 24,
             fontWeight: FontWeight.bold,
           ),
@@ -285,6 +286,16 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => NotificationPage()),
+              );
+            },
+          ),
+          IconButton(
+            icon:
+                const Icon(Icons.logout, color: Color.fromRGBO(76, 175, 80, 1)),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
               );
             },
           ),
@@ -323,7 +334,7 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
               child: _buildFeatureBox(
                 title: "Add Camp Details",
                 icon: Icons.local_hospital,
-                iconColor: Colors.green,
+                iconColor: const Color.fromRGBO(76, 175, 80, 1),
                 textColor: Colors.green,
                 onTap: () {
                   Navigator.push(

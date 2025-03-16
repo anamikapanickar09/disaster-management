@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'map_page.dart';
+import 'login_page.dart';
 import 'notification_page.dart';
-import 'add_camp_page.dart'; // Make sure to create this page
+import 'add_camp_page.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class VolunteerHomePage extends StatefulWidget {
   const VolunteerHomePage({super.key});
@@ -288,6 +290,19 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
               );
             },
           ),
+          IconButton(
+            icon: const Icon(
+              Icons.logout,
+              color:
+                  Color.from(alpha: 1, red: 0.298, green: 0.686, blue: 0.314),
+            ),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+              );
+            },
+          ),
         ],
       ),
       body: Padding(
@@ -323,7 +338,7 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
               child: _buildFeatureBox(
                 title: "Add Camp Details",
                 icon: Icons.local_hospital,
-                iconColor: Colors.green,
+                iconColor: const Color.fromRGBO(76, 175, 80, 1),
                 textColor: Colors.green,
                 onTap: () {
                   Navigator.push(
@@ -344,7 +359,7 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildEmergencyContactsBox(),
+            _buildEmergencyContactsBox(context),
           ],
         ),
       ),
@@ -387,7 +402,51 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
     );
   }
 
-  Widget _buildEmergencyContactsBox() {
+  Widget _buildEmergencyContactsBox(BuildContext context) {
+    final Map<String, String> emergencyContacts = {
+      'Police': '100',
+      'Ambulance': '102',
+      'Fire Brigade': '101',
+      'Medical Team Lead (John)': '+916238771626',
+      'Doctor (Emma)': '+918547243687',
+    };
+
+    Future<void> _makeCall(String number) async {
+      final Uri callUri = Uri(scheme: 'tel', path: number);
+      if (await canLaunchUrl(callUri)) {
+        await launchUrl(callUri);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch call')),
+        );
+      }
+    }
+
+    void _showCallDialog(String name, String number) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Call $name?'),
+            content: Text('Do you want to make a call to $number?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _makeCall(number);
+                },
+                child: const Text('Call'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -397,8 +456,8 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text(
+        children: [
+          const Text(
             "Emergency Contacts",
             style: TextStyle(
               color: Colors.white,
@@ -406,17 +465,40 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 12),
-          Text(
-            "Police: 100\n"
-            "Ambulance: 102\n"
-            "Fire Brigade: 101\n"
-            "Medical Team Lead (John): +91 98765 43210\n"
-            "Doctor (Emma): +91 91234 56789\n",
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 16,
-            ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: emergencyContacts.entries.map((entry) {
+              return GestureDetector(
+                onTap: () => _showCallDialog(entry.key, entry.value),
+                child: Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: Color.from(
+                        alpha: 1, red: 0.298, green: 0.686, blue: 0.314),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.phone, color: Colors.white, size: 30),
+                      const SizedBox(height: 4),
+                      Text(
+                        entry.key.split(' ')[0],
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
           ),
         ],
       ),
