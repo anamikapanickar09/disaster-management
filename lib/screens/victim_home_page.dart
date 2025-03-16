@@ -177,7 +177,7 @@ class _VictimHomePageState extends State<VictimHomePage> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.red,
+                  color: const Color.fromRGBO(76, 175, 80, 1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
@@ -225,7 +225,7 @@ class _VictimHomePageState extends State<VictimHomePage> {
               child: _buildFeatureBox(
                 title: "GPT Help",
                 icon: Icons.help,
-                iconColor: Colors.green,
+                iconColor: const Color.fromRGBO(76, 175, 80, 1),
                 textColor: Colors.green,
                 onTap: () {},
               ),
