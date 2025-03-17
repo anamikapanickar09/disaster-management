@@ -5,7 +5,8 @@ import 'package:geolocator/geolocator.dart';
 import 'map_page.dart';
 import 'notification_page.dart';
 import 'login_page.dart';
-import 'add_camp_page.dart'; // Make sure to create this page
+import 'add_camp_page.dart';
+import 'package:url_launcher/url_launcher.dart'; // Make sure to create this page
 
 class DoctorHomePage extends StatefulWidget {
   const DoctorHomePage({super.key});
@@ -355,7 +356,7 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildEmergencyContactsBox(),
+            _buildEmergencyContactsBox(context),
           ],
         ),
       ),
@@ -398,7 +399,50 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
     );
   }
 
-  Widget _buildEmergencyContactsBox() {
+  Widget _buildEmergencyContactsBox(BuildContext context) {
+    final Map<String, Map<String, dynamic>> emergencyContacts = {
+      'Police': {'number': '100', 'color': Colors.red},
+      'Ambulance': {'number': '102', 'color': Colors.blue},
+      'Fire': {'number': '101', 'color': Colors.orange},
+      'Volunteer': {'number': '+918547243687', 'color': Colors.green}
+    };
+
+    Future<void> makeCall(String number) async {
+      final Uri callUri = Uri(scheme: 'tel', path: number);
+      if (await launchUrl(callUri)) {
+        print('✅ Calling $number');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch call')),
+        );
+      }
+    }
+
+    void showCallDialog(String name, String number) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Call $name?'),
+            content: Text('Do you want to make a call to $number?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  makeCall(number);
+                },
+                child: const Text('Call'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -408,26 +452,51 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text(
-            "Emergency Contacts",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+        children: [
+          const Center(
+            child: Text(
+              "Emergency Contacts",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
-          SizedBox(height: 12),
-          Text(
-            "Police: 100\n"
-            "Ambulance: 102\n"
-            "Fire Brigade: 101\n"
-            "Volunteer 1 (John): +91 98765 43210\n"
-            "Volunteer 2 (Emma): +91 91234 56789\n"
-            "Volunteer 3 (Raj): +91 99887 76655",
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 16,
+          const SizedBox(height: 12),
+          Center(
+            child: Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: emergencyContacts.entries.map((entry) {
+                return GestureDetector(
+                  onTap: () => showCallDialog(entry.key, entry.value['number']),
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: entry.value['color'],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.phone, color: Colors.white, size: 24),
+                        const SizedBox(height: 6),
+                        Text(
+                          entry.key,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
           ),
         ],

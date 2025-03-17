@@ -403,18 +403,17 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
   }
 
   Widget _buildEmergencyContactsBox(BuildContext context) {
-    final Map<String, String> emergencyContacts = {
-      'Police': '100',
-      'Ambulance': '102',
-      'Fire Brigade': '101',
-      'Medical Team Lead (John)': '+916238771626',
-      'Doctor (Emma)': '+918547243687',
+    final Map<String, Map<String, dynamic>> emergencyContacts = {
+      'Police': {'number': '100', 'color': Colors.red},
+      'Ambulance': {'number': '102', 'color': Colors.blue},
+      'Fire': {'number': '101', 'color': Colors.orange},
+      'Medical': {'number': '+918547243687', 'color': Colors.green}
     };
 
-    Future<void> _makeCall(String number) async {
+    Future<void> makeCall(String number) async {
       final Uri callUri = Uri(scheme: 'tel', path: number);
-      if (await canLaunchUrl(callUri)) {
-        await launchUrl(callUri);
+      if (await launchUrl(callUri)) {
+        print('✅ Calling $number');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not launch call')),
@@ -422,7 +421,7 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
       }
     }
 
-    void _showCallDialog(String name, String number) {
+    void showCallDialog(String name, String number) {
       showDialog(
         context: context,
         builder: (BuildContext context) {
@@ -437,7 +436,7 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
               ElevatedButton(
                 onPressed: () {
                   Navigator.pop(context);
-                  _makeCall(number);
+                  makeCall(number);
                 },
                 child: const Text('Call'),
               ),
@@ -457,48 +456,51 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Emergency Contacts",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          const Center(
+            child: Text(
+              "Emergency Contacts",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: emergencyContacts.entries.map((entry) {
-              return GestureDetector(
-                onTap: () => _showCallDialog(entry.key, entry.value),
-                child: Container(
-                  width: 70,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    color: Color.from(
-                        alpha: 1, red: 0.298, green: 0.686, blue: 0.314),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.phone, color: Colors.white, size: 30),
-                      const SizedBox(height: 4),
-                      Text(
-                        entry.key.split(' ')[0],
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
+          Center(
+            child: Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: emergencyContacts.entries.map((entry) {
+                return GestureDetector(
+                  onTap: () => showCallDialog(entry.key, entry.value['number']),
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: entry.value['color'],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.phone, color: Colors.white, size: 24),
+                        const SizedBox(height: 6),
+                        Text(
+                          entry.key,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              );
-            }).toList(),
+                );
+              }).toList(),
+            ),
           ),
         ],
       ),

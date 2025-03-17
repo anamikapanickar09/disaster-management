@@ -18,7 +18,7 @@ dependencies:
   cloud_firestore: ^5.6.5
 
   # Notifications
-  flutter_local_notifications: ^16.1.0
+  flutter_local_notifications: ^17.0.0
 
   # Geolocation
   geolocator: ^11.0.0
@@ -40,8 +40,16 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "C:/Users/Babu/Downloads/IMG_2496.jpeg"
+  adaptive_icon_background: "#ffffff"
 
 flutter:
   uses-material-design: true
+
 dependency_overrides:
   flutter_keyboard_visibility: ^6.0.0

@@ -217,7 +217,7 @@ class _VictimHomePageState extends State<VictimHomePage> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildEmergencyContactsBox(),
+            _buildEmergencyContactsBox(context),
           ],
         ),
       ),
@@ -234,202 +234,133 @@ class _VictimHomePageState extends State<VictimHomePage> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.grey[900],
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 40, color: iconColor),
+            Icon(icon, color: iconColor, size: 40),
             const SizedBox(width: 16),
             Expanded(
               child: Text(
                 title,
                 style: TextStyle(
                   color: textColor,
-                  fontSize: 26,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            const Icon(Icons.arrow_forward_ios, color: Colors.green, size: 22),
+            const Icon(Icons.arrow_forward_ios, color: Colors.white),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildEmergencyContactsBox() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "Emergency Contacts",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 10),
-          _buildContactRow("Fire Department", "101"),
-          _buildContactRow("Ambulance", "102"),
-          _buildContactRow("Police", "100"),
-          _buildContactRow("Disaster Helpline", "108"),
-        ],
-      ),
-    );
-  }
+  Widget _buildEmergencyContactsBox(BuildContext context) {
+    final Map<String, Map<String, dynamic>> emergencyContacts = {
+      'Police': {'number': '100', 'color': Colors.red},
+      'Ambulance': {'number': '102', 'color': Colors.blue},
+      'Fire': {'number': '101', 'color': Colors.orange},
+      'Helpline': {'number': '+918547243687', 'color': Colors.green}
+    };
 
-  Widget _buildContactRow(String name, String number) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            name,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 16,
-            ),
-          ),
-          Text(
-            number,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+    Future<void> makeCall(String number) async {
+      final Uri callUri = Uri(scheme: 'tel', path: number);
+      if (await launchUrl(callUri)) {
+        print('✅ Calling $number');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch call')),
+        );
+      }
+    }
 
-  Future<void> _makePhoneCall(String number, BuildContext context) async {
-    final Uri callUri = Uri(scheme: 'tel', path: number);
-    if (await canLaunchUrl(callUri)) {
-      await launchUrl(callUri);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not launch $number')),
+    void showCallDialog(String name, String number) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Call $name?'),
+            content: Text('Do you want to make a call to $number?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  makeCall(number);
+                },
+                child: const Text('Call'),
+              ),
+            ],
+          );
+        },
       );
     }
-  }
 
-  void _showCallConfirmation(
-      BuildContext context, String service, String number) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[900],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Text(
-            "Call $service?",
-            style: const TextStyle(color: Colors.white),
-          ),
-          content: Text(
-            "Do you want to make a call to $service at $number?",
-            style: const TextStyle(color: Colors.white70),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                "Cancel",
-                style: TextStyle(color: Colors.redAccent),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _makePhoneCall(number, context);
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              child: const Text("Call"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget buildEmergencyContactsBox(BuildContext context) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.grey[850],
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Emergency Contacts",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          const Center(
+            child: Text(
+              "Emergency Contacts",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildContactButton(context, "Fire Dept", "101", Colors.red),
-              _buildContactButton(context, "Ambulance", "102", Colors.blue),
-              _buildContactButton(context, "Police", "100", Colors.orange),
-              _buildContactButton(context, "Helpline", "108", Colors.green),
-            ],
+          Center(
+            child: Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: emergencyContacts.entries.map((entry) {
+                return GestureDetector(
+                  onTap: () => showCallDialog(entry.key, entry.value['number']),
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: entry.value['color'],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.phone, color: Colors.white, size: 24),
+                        const SizedBox(height: 6),
+                        Text(
+                          entry.key,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildContactButton(
-      BuildContext context, String service, String number, Color color) {
-    return GestureDetector(
-      onTap: () => _showCallConfirmation(context, service, number),
-      child: Container(
-        width: 70,
-        height: 70,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.5),
-              blurRadius: 8,
-              spreadRadius: 1,
-            ),
-          ],
-        ),
-        child: Center(
-          child: Text(
-            service,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
       ),
     );
   }
