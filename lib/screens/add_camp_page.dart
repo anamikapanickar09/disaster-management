@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AddCampPage extends StatefulWidget {
   const AddCampPage({super.key});
@@ -13,10 +14,28 @@ class _AddCampPageState extends State<AddCampPage> {
   final TextEditingController _detailsController = TextEditingController();
   bool _isSubmitting = false;
 
+  Future<Map<String, dynamic>> fetchUserDetails() async {
+    String userId = FirebaseAuth.instance.currentUser?.uid ?? "";
+    if (userId.isEmpty) throw "User not logged in.";
+
+    DocumentSnapshot userSnapshot =
+        await FirebaseFirestore.instance.collection('users').doc(userId).get();
+
+    if (!userSnapshot.exists) throw "User details not found.";
+
+    return userSnapshot.data() as Map<String, dynamic>;
+  }
+
   Future<void> _submitCampDetails() async {
     setState(() => _isSubmitting = true);
 
     try {
+      // Get user details
+      Map<String, dynamic> userDetails = await fetchUserDetails();
+      String name = userDetails['name'] ?? 'Unknown';
+      String userType = userDetails['userType'] ?? 'Unknown';
+
+      // Check location permissions
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -28,11 +47,15 @@ class _AddCampPageState extends State<AddCampPage> {
         throw "Location permissions are permanently denied.";
       }
 
+      // Get current location
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
 
+      // Store data in Firebase
       await FirebaseFirestore.instance.collection('camps').add({
+        'name': name,
+        'userType': userType,
         'comment': _detailsController.text,
         'latitude': position.latitude,
         'longitude': position.longitude,
@@ -59,8 +82,7 @@ class _AddCampPageState extends State<AddCampPage> {
         title: const Text("Add Camp Details",
             style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.black,
-        iconTheme: const IconThemeData(
-            color: Colors.white), // <-- This makes the back button white
+        iconTheme: const IconThemeData(color: Colors.white),
         centerTitle: true,
       ),
       backgroundColor: Colors.black,

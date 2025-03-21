@@ -6,7 +6,9 @@ import 'map_page.dart';
 import 'notification_page.dart';
 import 'login_page.dart';
 import 'add_camp_page.dart';
-import 'package:url_launcher/url_launcher.dart'; // Make sure to create this page
+import 'package:url_launcher/url_launcher.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'update_page_state.dart'; // Import the new UpdatePage
 
 class DoctorHomePage extends StatefulWidget {
   const DoctorHomePage({super.key});
@@ -31,6 +33,31 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
 
   Future<void> sendEmergencyAlert(String comment) async {
     try {
+      String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        print("❌ No user logged in.");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No user logged in!')),
+        );
+        return;
+      }
+
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+      if (!userDoc.exists) {
+        print("❌ User details not found.");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User details not found!')),
+        );
+        return;
+      }
+
+      Map<String, dynamic> userDetails = userDoc.data() as Map<String, dynamic>;
+
+      String name = userDetails['name'] ?? 'Unknown';
+      String userType = userDetails['userType'] ?? 'Unknown';
+
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -50,6 +77,8 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
       );
 
       await FirebaseFirestore.instance.collection('alerts').add({
+        'name': name,
+        'userType': userType,
         'comment': comment,
         'latitude': position.latitude,
         'longitude': position.longitude,
@@ -74,7 +103,7 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Colors.grey[900], // Dark background
+          backgroundColor: Colors.grey[900],
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -129,134 +158,6 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
                 ),
               ),
               child: const Text("Send Alert"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showUpdateAlerts(BuildContext context) async {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[900],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: const Text(
-            "Nearby Alerts",
-            style: TextStyle(color: Colors.white),
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: StreamBuilder(
-              stream:
-                  FirebaseFirestore.instance.collection('alerts').snapshots(),
-              builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                    ),
-                  );
-                }
-                var alerts = snapshot.data!.docs;
-                return ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: alerts.length,
-                  itemBuilder: (context, index) {
-                    var alert = alerts[index];
-                    return Container(
-                      margin: const EdgeInsets.symmetric(vertical: 6),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[850],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ListTile(
-                        title: Text(
-                          alert['comment'],
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        subtitle: Text(
-                          "Lat: ${alert['latitude']}, Lng: ${alert['longitude']}",
-                          style: const TextStyle(
-                            color: Colors.white70,
-                          ),
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(
-                            Icons.edit,
-                            color: Colors.deepPurple,
-                          ),
-                          onPressed: () {
-                            _showEditAlertDialog(
-                              context,
-                              alert.id,
-                              alert['comment'],
-                            );
-                          },
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                "Close",
-                style: TextStyle(color: Colors.white70),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showEditAlertDialog(
-      BuildContext context, String alertId, String oldComment) {
-    TextEditingController editController =
-        TextEditingController(text: oldComment);
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Edit Alert"),
-          content: TextField(
-            controller: editController,
-            decoration: const InputDecoration(
-              labelText: "Updated Comment",
-              border: OutlineInputBorder(),
-            ),
-            maxLines: 3,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                await FirebaseFirestore.instance
-                    .collection('alerts')
-                    .doc(alertId)
-                    .update({'comment': editController.text});
-                Navigator.pop(context);
-                Navigator.pop(context);
-              },
-              style:
-                  ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
-              child: const Text("Update"),
             ),
           ],
         );
@@ -352,7 +253,12 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
                 icon: Icons.edit,
                 iconColor: Colors.orange,
                 textColor: Colors.orange,
-                onTap: () => _showUpdateAlerts(context),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => UpdatePage()),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 20),

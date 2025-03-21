@@ -18,6 +18,9 @@ class VictimHomePage extends StatefulWidget {
 class _VictimHomePageState extends State<VictimHomePage> {
   bool _isBlinking = true;
 
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController userTypeController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -29,8 +32,54 @@ class _VictimHomePageState extends State<VictimHomePage> {
     });
   }
 
+  Future<Map<String, String>> getCurrentUserDetails() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final docSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data();
+        return {
+          'name': data?['name'] ?? '',
+          'userType': data?['userType'] ?? '',
+        };
+      }
+    }
+    return {'name': '', 'userType': ''};
+  }
+
   Future<void> sendEmergencyAlert(String comment) async {
     try {
+      // Get current user's ID
+      String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        print("❌ No user logged in.");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No user logged in!')),
+        );
+        return;
+      }
+
+      // Fetch user details from Firestore
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+      if (!userDoc.exists) {
+        print("❌ User details not found.");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User details not found!')),
+        );
+        return;
+      }
+
+      Map<String, dynamic> userDetails = userDoc.data() as Map<String, dynamic>;
+
+      String name = userDetails['name'] ?? 'Unknown';
+      String userType = userDetails['userType'] ?? 'Unknown';
+
+      // Check location permissions
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -45,11 +94,15 @@ class _VictimHomePageState extends State<VictimHomePage> {
         return;
       }
 
+      // Get current location
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
 
+      // Send the alert
       await FirebaseFirestore.instance.collection('alerts').add({
+        'name': name,
+        'userType': userType,
         'comment': comment,
         'latitude': position.latitude,
         'longitude': position.longitude,
@@ -74,7 +127,7 @@ class _VictimHomePageState extends State<VictimHomePage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Colors.grey[900],
+          backgroundColor: Colors.grey[900], // Dark background
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -118,7 +171,9 @@ class _VictimHomePageState extends State<VictimHomePage> {
             ElevatedButton(
               onPressed: () async {
                 if (commentController.text.isNotEmpty) {
-                  await sendEmergencyAlert(commentController.text);
+                  await sendEmergencyAlert(
+                    commentController.text,
+                  );
                   Navigator.pop(context);
                 }
               },
