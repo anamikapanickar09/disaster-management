@@ -17,8 +17,8 @@ class _UpdatePageState extends State<UpdatePage> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Update Alerts & Camps'),
-          bottom: TabBar(
+          title: const Text('Update Alerts & Camps'),
+          bottom: const TabBar(
             tabs: [
               Tab(text: 'Alerts'),
               Tab(text: 'Camps'),
@@ -36,17 +36,22 @@ class _UpdatePageState extends State<UpdatePage> {
   }
 }
 
-class UpdateAlerts extends StatelessWidget {
+class UpdateAlerts extends StatefulWidget {
+  const UpdateAlerts({super.key});
+
+  @override
+  _UpdateAlertsState createState() => _UpdateAlertsState();
+}
+
+class _UpdateAlertsState extends State<UpdateAlerts> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  UpdateAlerts({super.key});
 
   Future<Map<String, String>> getCurrentUserDetails() async {
     var userDoc =
         await _firestore.collection('users').doc(_auth.currentUser?.uid).get();
     return {
-      'userType': userDoc['userType'] ?? 'Unknown',
+      'userType': userDoc['userType']?.toString() ?? 'Unknown',
       'name': userDoc['name'] ?? 'Anonymous',
     };
   }
@@ -57,7 +62,7 @@ class UpdateAlerts extends StatelessWidget {
       stream: _firestore.collection('alerts').snapshots(),
       builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
         if (!snapshot.hasData) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
 
         var alerts = snapshot.data!.docs;
@@ -66,18 +71,29 @@ class UpdateAlerts extends StatelessWidget {
           itemCount: alerts.length,
           itemBuilder: (context, index) {
             var alert = alerts[index];
-            var comments = alert['comment'];
-            if (comments is String) {
-              comments = [comments];
-            } else if (comments == null) {
-              comments = [];
+            var comments = [];
+
+            if (alert['comment'] is List) {
+              comments = alert['comment'] as List<dynamic>;
+            } else if (alert['comment'] is String) {
+              comments = [
+                {
+                  'userType': alert['userType'] ?? 'Unknown',
+                  'userName': alert['name'] ?? 'Anonymous',
+                  'time': '',
+                  'latitude': alert['latitude'],
+                  'longitude': alert['longitude'],
+                  'comment': alert['comment'],
+                }
+              ];
             }
+
             TextEditingController commentController = TextEditingController();
 
             return Card(
-              margin: EdgeInsets.all(8),
+              margin: const EdgeInsets.all(8),
               child: Padding(
-                padding: EdgeInsets.all(12),
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -85,21 +101,33 @@ class UpdateAlerts extends StatelessWidget {
                     Text('Longitude: ${alert['longitude']}'),
                     Text('User Type: ${alert['userType']}'),
                     Text('Name: ${alert['name']}'),
-                    SizedBox(height: 10),
-                    Text('Comments:',
+                    const SizedBox(height: 10),
+                    const Text('Comments:',
                         style: TextStyle(fontWeight: FontWeight.bold)),
-                    ...comments.map((c) => Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                                '${c['userType']} - ${c['userName']} - ${c['time']}'),
-                            Text(c['comment']),
-                            SizedBox(height: 10),
-                          ],
+                    ...comments.map((c) => Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('${c['userType']}: ${c['userName']}'),
+                              Text('Time: ${c['time']}'),
+                              Text('Latitude: ${c['latitude']}'),
+                              Text('Longitude: ${c['longitude']}'),
+                              const SizedBox(height: 4),
+                              Text(c['comment'] ?? ''),
+                            ],
+                          ),
                         )),
+                    const SizedBox(height: 10),
                     TextField(
                       controller: commentController,
-                      decoration: InputDecoration(labelText: 'Add a comment'),
+                      decoration:
+                          const InputDecoration(labelText: 'Add a comment'),
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -113,29 +141,19 @@ class UpdateAlerts extends StatelessWidget {
                               'userType': userDetails['userType'],
                               'userName': userDetails['name'],
                               'time': timestamp,
+                              'latitude': alert['latitude'],
+                              'longitude': alert['longitude'],
                               'comment': commentController.text,
                             };
                             await _firestore
                                 .collection('alerts')
                                 .doc(alert.id)
                                 .update({
-                              'comments': FieldValue.arrayUnion([newComment]),
+                              'comment': FieldValue.arrayUnion([newComment]),
                             });
                             commentController.clear();
                           },
-                          child: Text('Add Comment'),
-                        ),
-                        SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: () async {
-                            await _firestore
-                                .collection('alerts')
-                                .doc(alert.id)
-                                .delete();
-                          },
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red),
-                          child: Text('Delete'),
+                          child: const Text('Add Comment'),
                         ),
                       ],
                     ),
@@ -161,7 +179,7 @@ class UpdateCamps extends StatelessWidget {
       stream: _firestore.collection('camps').snapshots(),
       builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
         if (!snapshot.hasData) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         }
 
         var camps = snapshot.data!.docs;
@@ -180,24 +198,27 @@ class UpdateCamps extends StatelessWidget {
                 TextEditingController(text: camp['name']);
 
             return Card(
-              margin: EdgeInsets.all(8),
+              margin: const EdgeInsets.all(8),
               child: Padding(
-                padding: EdgeInsets.all(12),
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     TextField(
                         controller: latitudeController,
-                        decoration: InputDecoration(labelText: 'Latitude')),
+                        decoration:
+                            const InputDecoration(labelText: 'Latitude')),
                     TextField(
                         controller: longitudeController,
-                        decoration: InputDecoration(labelText: 'Longitude')),
+                        decoration:
+                            const InputDecoration(labelText: 'Longitude')),
                     TextField(
                         controller: typeController,
-                        decoration: InputDecoration(labelText: 'User Type')),
+                        decoration:
+                            const InputDecoration(labelText: 'User Type')),
                     TextField(
                         controller: nameController,
-                        decoration: InputDecoration(labelText: 'Name')),
+                        decoration: const InputDecoration(labelText: 'Name')),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
@@ -214,9 +235,9 @@ class UpdateCamps extends StatelessWidget {
                               'name': nameController.text,
                             });
                           },
-                          child: Text('Update'),
+                          child: const Text('Update'),
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         ElevatedButton(
                           onPressed: () async {
                             await _firestore
@@ -226,7 +247,7 @@ class UpdateCamps extends StatelessWidget {
                           },
                           style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red),
-                          child: Text('Delete'),
+                          child: const Text('Delete'),
                         ),
                       ],
                     ),
