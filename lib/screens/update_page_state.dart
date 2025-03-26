@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import '../services/api_service.dart';
 
 class UpdatePage extends StatefulWidget {
   const UpdatePage({super.key});
@@ -86,12 +87,31 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '${alert['name']}(${alert['userType']})',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${alert['name']}(${alert['userType']})',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            FutureBuilder<String>(
+                              future: getPlaceFromCoordinates(alert['latitude'], alert['longitude']),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                  return Text('Loading place...');
+                                } else if (snapshot.hasError) {
+                                  return Text('Error: ${snapshot.error}');
+                                } else if (snapshot.hasData) {
+                                  return Text(snapshot.data!); // !.split(', ').join(',\n'));
+                                } else {
+                                  return Container();
+                                }
+                              },
+                            ),
+                          ],
                         ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
@@ -102,8 +122,6 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                         )
                       ],
                     ),
-                    Text('Latitude: ${alert['latitude']}'),
-                    Text('Longitude: ${alert['longitude']}'),
                     Text(
                       alert['comment'],
                       style: TextStyle(
@@ -133,7 +151,7 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                                   Text(
                                     '${c['userName']}(${c['userType']})',
                                     style: TextStyle(
-                                      fontSize: 20,
+                                      fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
