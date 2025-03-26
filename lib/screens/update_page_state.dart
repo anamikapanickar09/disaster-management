@@ -71,22 +71,8 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
           itemCount: alerts.length,
           itemBuilder: (context, index) {
             var alert = alerts[index];
-            var comments = [];
-
-            if (alert['comment'] is List) {
-              comments = alert['comment'] as List<dynamic>;
-            } else if (alert['comment'] is String) {
-              comments = [
-                {
-                  'userType': alert['userType'] ?? 'Unknown',
-                  'userName': alert['name'] ?? 'Anonymous',
-                  'time': '',
-                  'latitude': alert['latitude'],
-                  'longitude': alert['longitude'],
-                  'comment': alert['comment'],
-                }
-              ];
-            }
+            DateTime timestamp = (alert['timestamp'] as Timestamp).toDate();
+            var replies = (alert.data() as Map<String, dynamic>).containsKey('replies') ? alert['replies'] : [];
 
             TextEditingController commentController = TextEditingController();
 
@@ -97,51 +83,71 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${alert['name']}(${alert['userType']})',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(DateFormat('dd MMM yyyy').format(timestamp), textAlign: TextAlign.right,),
+                            Text(DateFormat('hh:mm a').format(timestamp), textAlign: TextAlign.right,),
+                          ],
+                        )
+                      ],
+                    ),
                     Text('Latitude: ${alert['latitude']}'),
                     Text('Longitude: ${alert['longitude']}'),
-                    Text('User Type: ${alert['userType']}'),
-                    Text('Name: ${alert['name']}'),
-                    const SizedBox(height: 10),
-                    const Text('Comments:',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    // Show the first comment (original alert) at the top
-                    if (comments.isNotEmpty)
-                      Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                                '${comments[0]['userType']}: ${comments[0]['userName']}'),
-                            Text('Time: ${comments[0]['time']}'),
-                            Text('Latitude: ${comments[0]['latitude']}'),
-                            Text('Longitude: ${comments[0]['longitude']}'),
-                            const SizedBox(height: 4),
-                            Text(comments[0]['comment'] ?? ''),
-                          ],
-                        ),
+                    Text(
+                      alert['comment'],
+                      style: TextStyle(
+                        fontSize: 18,
                       ),
-                    ...comments.skip(1).map((c) => Container(
+                    ),
+                    const SizedBox(height: 10),
+                    if (replies.isNotEmpty)
+                      const Text(
+                        'Replies:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ...replies.map((c) => Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
                           padding: const EdgeInsets.all(8),
+                          width: MediaQuery.of(context).size.width * 0.9,
                           decoration: BoxDecoration(
-                            color: Colors.grey[200],
+                            color: Colors.white.withValues(alpha: 0.04),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('${c['userType']}: ${c['userName']}'),
-                              Text('Time: ${c['time']}'),
-                              Text('Latitude: ${c['latitude']}'),
-                              Text('Longitude: ${c['longitude']}'),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '${c['userName']}(${c['userType']})',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(DateFormat('dd MMM yyyy').format(DateTime.parse(c['time'])), textAlign: TextAlign.right,),
+                                      Text(DateFormat('hh:mm a').format(DateTime.parse(c['time'])), textAlign: TextAlign.right,),
+                                    ],
+                                  )
+                                ],
+                              ),
                               const SizedBox(height: 4),
-                              Text(c['comment'] ?? ''),
+                              Text(c['reply'] ?? ''),
                             ],
                           ),
                         )),
@@ -163,15 +169,13 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                               'userType': userDetails['userType'],
                               'userName': userDetails['name'],
                               'time': timestamp,
-                              'latitude': alert['latitude'],
-                              'longitude': alert['longitude'],
-                              'comment': commentController.text,
+                              'reply': commentController.text,
                             };
                             await _firestore
                                 .collection('alerts')
                                 .doc(alert.id)
                                 .update({
-                              'comment': FieldValue.arrayUnion([newComment]),
+                              'replies': FieldValue.arrayUnion([newComment]),
                             });
                             commentController.clear();
                           },
