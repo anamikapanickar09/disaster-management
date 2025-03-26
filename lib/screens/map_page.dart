@@ -16,6 +16,7 @@ class _MapPageState extends State<MapPage> {
   final MapController _mapController = MapController();
   LatLng? userLocation;
   TextEditingController searchController = TextEditingController();
+  String mapUrlTemplate = "http://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"; // "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png";
 
   @override
   void initState() {
@@ -171,9 +172,8 @@ class _MapPageState extends State<MapPage> {
               ),
               children: [
                 TileLayer(
-                  urlTemplate:
-                      "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png",
-                  subdomains: ['a', 'b', 'c'],
+                  urlTemplate: mapUrlTemplate,
+                  subdomains: ['0', '1', '2', '3'],
                 ),
                 MarkerLayer(markers: markers),
               ],
