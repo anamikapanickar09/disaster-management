@@ -263,7 +263,7 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
             const SizedBox(height: 16),
             Expanded(
               child: _buildFeatureBox(
-                title: "Update Alerts",
+                title: "Alerts & Camps",
                 icon: Icons.edit,
                 iconColor: Colors.orange,
                 textColor: Colors.orange,
