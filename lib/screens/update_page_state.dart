@@ -232,14 +232,6 @@ class UpdateCamps extends StatelessWidget {
           itemCount: camps.length,
           itemBuilder: (context, index) {
             var camp = camps[index];
-            TextEditingController latitudeController =
-                TextEditingController(text: camp['latitude'].toString());
-            TextEditingController longitudeController =
-                TextEditingController(text: camp['longitude'].toString());
-            TextEditingController typeController =
-                TextEditingController(text: camp['userType']);
-            TextEditingController nameController =
-                TextEditingController(text: camp['name']);
 
             return Card(
               margin: const EdgeInsets.all(8),
@@ -249,20 +241,40 @@ class UpdateCamps extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     TextField(
-                        controller: latitudeController,
-                        decoration:
-                            const InputDecoration(labelText: 'Latitude')),
+                      readOnly: true,
+                      controller: TextEditingController(text: camp['latitude'].toString()),
+                      decoration: InputDecoration(
+                        labelText: 'Latitude',
+                      ),
+                    ),
                     TextField(
-                        controller: longitudeController,
-                        decoration:
-                            const InputDecoration(labelText: 'Longitude')),
+                      readOnly: true,
+                      controller: TextEditingController(text: camp['longitude'].toString()),
+                      decoration: InputDecoration(
+                        labelText: 'Longitude',
+                      ),
+                    ),
                     TextField(
-                        controller: typeController,
-                        decoration:
-                            const InputDecoration(labelText: 'User Type')),
+                      readOnly: true,
+                      controller: TextEditingController(text: camp['userType'].toString()),
+                      decoration: InputDecoration(
+                        labelText: 'User Type',
+                      ),
+                    ),
                     TextField(
-                        controller: nameController,
-                        decoration: const InputDecoration(labelText: 'Name')),
+                      readOnly: true,
+                      controller: TextEditingController(text: camp['name'].toString()),
+                      decoration: InputDecoration(
+                        labelText: 'Name',
+                      ),
+                    ),
+                    TextField(
+                      readOnly: true,
+                      controller: TextEditingController(text: (!camp['closed']).toString()),
+                      decoration: InputDecoration(
+                        labelText: 'is open',
+                      ),
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
@@ -272,11 +284,11 @@ class UpdateCamps extends StatelessWidget {
                                 .collection('camps')
                                 .doc(camp.id)
                                 .update({
-                              'latitude': double.parse(latitudeController.text),
-                              'longitude':
-                                  double.parse(longitudeController.text),
-                              'userType': typeController.text,
-                              'name': nameController.text,
+                              // 'latitude': double.parse(latitudeController.text),
+                              // 'longitude':
+                              //     double.parse(longitudeController.text),
+                              // 'userType': typeController.text,
+                              // 'name': nameController.text,
                             });
                           },
                           child: const Text('Update'),
