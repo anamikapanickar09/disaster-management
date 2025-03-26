@@ -98,68 +98,81 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
   }
 
   void _showEmergencyAlert(BuildContext context) {
+    bool isLoading = false;
     TextEditingController commentController = TextEditingController();
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[900],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: const Text(
-            "Emergency Alert",
-            style: TextStyle(color: Colors.white),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                "Send an emergency alert to other users.",
-                style: TextStyle(color: Colors.white70),
+        return StatefulBuilder(
+          builder: (BuildContext context, setState) {
+            return AlertDialog(
+              backgroundColor: Colors.grey[900],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
               ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: commentController,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.grey[800],
-                  labelText: "Emergency Comments",
-                  labelStyle: const TextStyle(color: Colors.white70),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+              title: const Text(
+                "Emergency Alert",
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if(!isLoading) const Text(
+                    "Send an emergency alert to other users.",
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  const SizedBox(height: 10),
+                  if(!isLoading) TextField(
+                    controller: commentController,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.grey[800],
+                      labelText: "Emergency Comments",
+                      labelStyle: const TextStyle(color: Colors.white70),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    maxLines: 3,
+                  ),
+                  if (isLoading)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 10),
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+                      ),
+                    ),
+                ],
+              ),
+              actions: [
+                if(!isLoading) TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(color: Colors.white70),
                   ),
                 ),
-                style: const TextStyle(color: Colors.white),
-                maxLines: 3,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                "Cancel",
-                style: TextStyle(color: Colors.white70),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (commentController.text.isNotEmpty) {
-                  await sendEmergencyAlert(commentController.text);
-                  Navigator.pop(context);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                if(!isLoading) TextButton(
+                  onPressed: () async {
+                    if (commentController.text.isNotEmpty) {
+                      setState(()=> isLoading = true );
+                      await sendEmergencyAlert(commentController.text);
+                      Navigator.pop(context);
+                      setState(()=> isLoading = false );
+                    }
+                  },
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.black26,
+                  ),
+                  child: Text(
+                    "Send Alert",
+                    style: TextStyle(color: Colors.red),
+                  ),
                 ),
-              ),
-              child: const Text("Send Alert"),
-            ),
-          ],
+              ],
+            );
+
+          }
         );
       },
     );
@@ -168,6 +181,7 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text(
