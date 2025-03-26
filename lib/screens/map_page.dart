@@ -16,7 +16,7 @@ class _MapPageState extends State<MapPage> {
   final MapController _mapController = MapController();
   LatLng? userLocation;
   TextEditingController searchController = TextEditingController();
-  String mapUrlTemplate = "http://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"; // "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png";
+  String mapUrlTemplate = "https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"; // "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png";
 
   @override
   void initState() {
