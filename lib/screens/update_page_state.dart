@@ -104,7 +104,27 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                     const SizedBox(height: 10),
                     const Text('Comments:',
                         style: TextStyle(fontWeight: FontWeight.bold)),
-                    ...comments.map((c) => Container(
+                    if (comments.isNotEmpty)
+                      Container(
+                        margin: const EdgeInsets.symmetric(vertical: 4),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('${comments[0]['userType']}: ${comments[0]['userName']}'),
+                            Text('Time: ${comments[0]['time']}'),
+                            Text('Latitude: ${comments[0]['latitude']}'),
+                            Text('Longitude: ${comments[0]['longitude']}'),
+                            const SizedBox(height: 4),
+                            Text(comments[0]['comment'] ?? ''),
+                          ],
+                        ),
+                      ),
+                    ...comments.skip(1).map((c) => Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
@@ -198,66 +218,3 @@ class UpdateCamps extends StatelessWidget {
                 TextEditingController(text: camp['name']);
 
             return Card(
-              margin: const EdgeInsets.all(8),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                        controller: latitudeController,
-                        decoration:
-                            const InputDecoration(labelText: 'Latitude')),
-                    TextField(
-                        controller: longitudeController,
-                        decoration:
-                            const InputDecoration(labelText: 'Longitude')),
-                    TextField(
-                        controller: typeController,
-                        decoration:
-                            const InputDecoration(labelText: 'User Type')),
-                    TextField(
-                        controller: nameController,
-                        decoration: const InputDecoration(labelText: 'Name')),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        ElevatedButton(
-                          onPressed: () async {
-                            await _firestore
-                                .collection('camps')
-                                .doc(camp.id)
-                                .update({
-                              'latitude': double.parse(latitudeController.text),
-                              'longitude':
-                                  double.parse(longitudeController.text),
-                              'userType': typeController.text,
-                              'name': nameController.text,
-                            });
-                          },
-                          child: const Text('Update'),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: () async {
-                            await _firestore
-                                .collection('camps')
-                                .doc(camp.id)
-                                .delete();
-                          },
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red),
-                          child: const Text('Delete'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-}
