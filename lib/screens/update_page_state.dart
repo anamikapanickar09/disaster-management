@@ -331,13 +331,20 @@ class UpdateCamps extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         FilledButton(
-                          onPressed: () async {
-                            await _firestore
-                                .collection('camps')
-                                .doc(camp.id)
-                                .update({
-                              'is_open': false,
-                            });
+                          onPressed: (){
+                            showPopUp(
+                              context,
+                              popUpTitle: Text('Close Camp'),
+                              popUpContent: Text('Are you sure you want to close the camp?'),
+                              function: () async {
+                                await _firestore
+                                  .collection('camps')
+                                  .doc(camp.id)
+                                  .update({
+                                    'is_open': false,
+                                  });
+                              }
+                            );
                           },
                           child: const Text('Close Camp'),
                         ),
