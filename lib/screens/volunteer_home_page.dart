@@ -8,6 +8,7 @@ import 'notification_page.dart';
 import 'add_camp_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'update_page_state.dart';
 
 class VolunteerHomePage extends StatefulWidget {
   const VolunteerHomePage({super.key});
@@ -406,11 +407,16 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
             const SizedBox(height: 16),
             Expanded(
               child: _buildFeatureBox(
-                title: "Update Alerts",
+                title: "Alerts & Camps",
                 icon: Icons.edit,
                 iconColor: Colors.orange,
                 textColor: Colors.orange,
-                onTap: () => _showUpdateAlerts(context),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => UpdatePage()),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 20),

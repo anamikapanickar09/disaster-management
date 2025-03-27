@@ -274,40 +274,31 @@ class UpdateCamps extends StatelessWidget {
                     ),
                     TextField(
                       readOnly: true,
-                      controller: TextEditingController(text: (!camp['closed']).toString()),
+                      controller: TextEditingController(text: camp['comment'].toString()),
                       decoration: InputDecoration(
-                        labelText: 'is open',
+                        labelText: 'Comment',
                       ),
                     ),
-                    Row(
+                    TextField(
+                      readOnly: true,
+                      controller: TextEditingController(text: (camp['is_open']) ? 'open' : 'closed'),
+                      decoration: InputDecoration(
+                        labelText: 'status',
+                      ),
+                    ),
+                    if(camp['is_open']) Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        ElevatedButton(
+                        FilledButton(
                           onPressed: () async {
                             await _firestore
                                 .collection('camps')
                                 .doc(camp.id)
                                 .update({
-                              // 'latitude': double.parse(latitudeController.text),
-                              // 'longitude':
-                              //     double.parse(longitudeController.text),
-                              // 'userType': typeController.text,
-                              // 'name': nameController.text,
+                              'is_open': false,
                             });
                           },
-                          child: const Text('Update'),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: () async {
-                            await _firestore
-                                .collection('camps')
-                                .doc(camp.id)
-                                .delete();
-                          },
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red),
-                          child: const Text('Delete'),
+                          child: const Text('Close Camp'),
                         ),
                       ],
                     ),
