@@ -67,6 +67,7 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
         }
 
         var alerts = snapshot.data!.docs;
+        alerts.sort((a, b) => (b['timestamp'] as Timestamp).compareTo((a['timestamp'] as Timestamp)));
 
         return ListView.builder(
           itemCount: alerts.length,
@@ -176,13 +177,10 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                     const SizedBox(height: 10),
                     TextField(
                       controller: commentController,
-                      decoration:
-                          const InputDecoration(labelText: 'Add a comment'),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        ElevatedButton(
+                      decoration: InputDecoration(
+                        labelText: 'Add a comment',
+                        suffixIcon: IconButton(
+                          icon: Icon(Icons.send),
                           onPressed: () async {
                             var userDetails = await getCurrentUserDetails();
                             String timestamp = DateFormat('yyyy-MM-dd HH:mm:ss')
@@ -201,8 +199,20 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                             });
                             commentController.clear();
                           },
-                          child: const Text('Add Comment'),
                         ),
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        // ElevatedButton(
+                        //   onPressed: (){},
+                        //   child: const Text('Commit Case'),
+                        // ),
+                        // ElevatedButton(
+                        //   onPressed: (){},
+                        //   child: const Text('Close Case'),
+                        // ),
                       ],
                     ),
                   ],
