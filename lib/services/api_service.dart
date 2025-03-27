@@ -18,7 +18,7 @@ Future<String> getPlaceFromCoordinates(num lat, num long) async {
   var data = json.decode(response.body);
   // print('Data: $data');
   List<String> address = data['display_name'].toString().split(", ");
-  String address_string = address.sublist(0, address.length-2).join(', ');
-  reverseMap['$long,$lat'] = address_string;
-  return address_string;
+  String addressString = address.sublist(0, address.length-2).join(', ');
+  reverseMap['$long,$lat'] = addressString;
+  return addressString;
 }
