@@ -8,7 +8,7 @@ class UpdatePage extends StatefulWidget {
   const UpdatePage({super.key});
 
   @override
-  _UpdatePageState createState() => _UpdatePageState();
+  State<UpdatePage> createState() => _UpdatePageState();
 }
 
 class _UpdatePageState extends State<UpdatePage> {
@@ -41,7 +41,7 @@ class UpdateAlerts extends StatefulWidget {
   const UpdateAlerts({super.key});
 
   @override
-  _UpdateAlertsState createState() => _UpdateAlertsState();
+  State<UpdateAlerts> createState() => _UpdateAlertsState();
 }
 
 class _UpdateAlertsState extends State<UpdateAlerts> {
@@ -86,32 +86,36 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${alert['name']}(${alert['userType']})',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
+                        SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.9 - 100,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${alert['name']}(${alert['userType']})',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            FutureBuilder<String>(
-                              future: getPlaceFromCoordinates(alert['latitude'], alert['longitude']),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState == ConnectionState.waiting) {
-                                  return Text('Loading place...');
-                                } else if (snapshot.hasError) {
-                                  return Text('Error: ${snapshot.error}');
-                                } else if (snapshot.hasData) {
-                                  return Text(snapshot.data!); // !.split(', ').join(',\n'));
-                                } else {
-                                  return Container();
-                                }
-                              },
-                            ),
-                          ],
+                              FutureBuilder<String>(
+                                future: getPlaceFromCoordinates(alert['latitude'], alert['longitude']),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                    return Text('Loading place...');
+                                  } else if (snapshot.hasError) {
+                                    return Text('Error: ${snapshot.error}');
+                                  } else if (snapshot.hasData) {
+                                    return Text(snapshot.data!); // !.split(', ').join(',\n'));
+                                  } else {
+                                    return Container();
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
