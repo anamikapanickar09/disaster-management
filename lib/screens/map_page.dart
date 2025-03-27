@@ -61,7 +61,8 @@ class _MapPageState extends State<MapPage> {
         .collection('alerts')
         .snapshots()
         .listen((snapshot) {
-      List<Marker> alertMarkers = snapshot.docs.map((doc) {
+      List<dynamic> unClosedAlerts = snapshot.docs.where((i) => i['closed'] == false).toList();
+      List<Marker> alertMarkers = unClosedAlerts.map((doc) {
         final data = doc.data();
         final comment = data['comment'] ?? "No comment";
         final latitude = data['latitude'] ?? 0.0;
@@ -73,7 +74,7 @@ class _MapPageState extends State<MapPage> {
           point: LatLng(latitude, longitude),
           child: GestureDetector(
             onTap: () => _showInfoDialog("Emergency Alert", comment),
-            child: const Icon(Icons.location_on, color: Colors.red, size: 40),
+            child: Icon(Icons.location_on, color: data['committed'] ? Colors.yellow[800] : Colors.red, size: 40),
           ),
         );
       }).toList();
