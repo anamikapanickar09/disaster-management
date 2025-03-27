@@ -59,6 +59,7 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
     return StreamBuilder(
       stream: _firestore.collection('alerts').snapshots(),
       builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
@@ -68,6 +69,7 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
 
         var alerts = snapshot.data!.docs;
         alerts.sort((a, b) => (b['timestamp'] as Timestamp).compareTo((a['timestamp'] as Timestamp)));
+        alerts = alerts.where((i) => !i['closed']).toList();
 
         return ListView.builder(
           itemCount: alerts.length,
@@ -90,7 +92,7 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.9 - 100,
+                          width: screenWidth * 0.9 - 100,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -142,7 +144,7 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                     ...replies.map((c) => Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
                           padding: const EdgeInsets.all(8),
-                          width: MediaQuery.of(context).size.width * 0.9,
+                          width: screenWidth * 0.9,
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.04),
                             borderRadius: BorderRadius.circular(8),
@@ -203,16 +205,30 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                       ),
                     ),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        // ElevatedButton(
-                        //   onPressed: (){},
-                        //   child: const Text('Commit Case'),
-                        // ),
-                        // ElevatedButton(
-                        //   onPressed: (){},
-                        //   child: const Text('Close Case'),
-                        // ),
+                        ElevatedButton(
+                          onPressed: alert['committed'] ? null : () async {
+                            await _firestore
+                                .collection('alerts')
+                                .doc(alert.id)
+                                .update({
+                              'committed': true,
+                            });
+                          },
+                          child: SizedBox(width: screenWidth*0.28, child: Center(child: Text('Commit Case'))),
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            await _firestore
+                                .collection('alerts')
+                                .doc(alert.id)
+                                .update({
+                              'closed': true,
+                            });
+                          },
+                          child: SizedBox(width: screenWidth*0.28, child: Center(child: Text('Close Case')),),
+                        ),
                       ],
                     ),
                   ],
