@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import '../services/api_service.dart';
+import '../services/pop_up.dart';
 
 class UpdatePage extends StatefulWidget {
   const UpdatePage({super.key});
@@ -208,24 +209,38 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         ElevatedButton(
-                          onPressed: alert['committed'] ? null : () async {
-                            await _firestore
-                                .collection('alerts')
-                                .doc(alert.id)
-                                .update({
-                              'committed': true,
-                            });
+                          onPressed: alert['committed'] ? null : (){
+                            showPopUp(
+                              context,
+                              popUpTitle: Text('Commit Case'),
+                              popUpContent: Text('Are you sure you want to commit the case?'),
+                              function: () async {
+                                await _firestore
+                                    .collection('alerts')
+                                    .doc(alert.id)
+                                    .update({
+                                  'committed': true,
+                                });
+                              }
+                            );
                           },
                           child: SizedBox(width: screenWidth*0.28, child: Center(child: Text('Commit Case'))),
                         ),
                         ElevatedButton(
-                          onPressed: () async {
-                            await _firestore
-                                .collection('alerts')
-                                .doc(alert.id)
-                                .update({
-                              'closed': true,
-                            });
+                          onPressed: alert['closed'] ? null : (){
+                            showPopUp(
+                              context,
+                              popUpTitle: Text('Close Case'),
+                              popUpContent: Text('Are you sure you want to close the case?'),
+                              function: () async {
+                                await _firestore
+                                    .collection('alerts')
+                                    .doc(alert.id)
+                                    .update({
+                                  'closed': true,
+                                });
+                              }
+                            );
                           },
                           child: SizedBox(width: screenWidth*0.28, child: Center(child: Text('Close Case')),),
                         ),
