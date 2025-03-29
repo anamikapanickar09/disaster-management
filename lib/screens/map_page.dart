@@ -16,7 +16,9 @@ class _MapPageState extends State<MapPage> {
   final MapController _mapController = MapController();
   LatLng? userLocation;
   TextEditingController searchController = TextEditingController();
-  String mapUrlTemplate = "https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}"; // "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png";
+  String mapUrlTemplate = "https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}";
+  // String mapUrlTemplate = "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png";
+  late var firebaseSubscription;
 
   @override
   void initState() {
@@ -43,9 +45,11 @@ class _MapPageState extends State<MapPage> {
     }
 
     LocationData locationData = await location.getLocation();
-    setState(() {
-      userLocation = LatLng(locationData.latitude!, locationData.longitude!);
-    });
+    if(mounted){
+      setState(() {
+        userLocation = LatLng(locationData.latitude!, locationData.longitude!);
+      });
+    }
 
     zoomToUserLocation();
   }
@@ -57,12 +61,12 @@ class _MapPageState extends State<MapPage> {
   }
 
   void fetchMapData() {
-    FirebaseFirestore.instance
+    firebaseSubscription = FirebaseFirestore.instance
         .collection('alerts')
+        .where('closed', isEqualTo: false)
         .snapshots()
         .listen((snapshot) {
-      List<dynamic> unClosedAlerts = snapshot.docs.where((i) => i['closed'] == false).toList();
-      List<Marker> alertMarkers = unClosedAlerts.map((doc) {
+      List<Marker> alertMarkers = snapshot.docs.map((doc) {
         final data = doc.data();
         final comment = data['comment'] ?? "No comment";
         final latitude = data['latitude'] ?? 0.0;
@@ -74,16 +78,18 @@ class _MapPageState extends State<MapPage> {
           point: LatLng(latitude, longitude),
           child: GestureDetector(
             onTap: () => _showInfoDialog("Emergency Alert", comment),
-            child: Icon(Icons.location_on, color: data['committed'] ? Colors.yellow[800] : Colors.red, size: 40),
+            child: Icon(Icons.location_on, color: data['committed'] ? Colors.yellow[800] : Colors.red, size: 35),
           ),
         );
       }).toList();
 
       FirebaseFirestore.instance
           .collection('camps')
+          .where('is_open', isEqualTo: false)
           .snapshots()
           .listen((snapshot) {
         List<Marker> campMarkers = snapshot.docs.map((doc) {
+          print("running bruh");
           final data = doc.data();
           final comment = data['comment'] ?? "No comment";
           final latitude = data['latitude'] ?? 0.0;
@@ -96,16 +102,24 @@ class _MapPageState extends State<MapPage> {
             child: GestureDetector(
               onTap: () => _showInfoDialog("Camp Location", comment),
               child: const Icon(Icons.local_hospital,
-                  color: Colors.green, size: 40),
+                  color: Colors.green, size: 35),
             ),
           );
         }).toList();
 
-        setState(() {
-          markers = [...alertMarkers, ...campMarkers];
-        });
+        if (context.mounted) {
+          setState(() {
+            markers = [...alertMarkers, ...campMarkers];
+          });
+        }
       });
     });
+  }
+
+  @override
+  void dispose() {
+    firebaseSubscription.cancel();
+    super.dispose();
   }
 
   void searchAndZoom(String query) {
@@ -170,11 +184,14 @@ class _MapPageState extends State<MapPage> {
               options: MapOptions(
                 initialCenter: userLocation ?? LatLng(10.0, 76.0),
                 initialZoom: 10.0,
+                maxZoom: 19,
+                minZoom: 1,
               ),
               children: [
                 TileLayer(
                   urlTemplate: mapUrlTemplate,
                   subdomains: ['0', '1', '2', '3'],
+                  // subdomains: ['a', 'b', 'c'],
                 ),
                 MarkerLayer(markers: markers),
               ],

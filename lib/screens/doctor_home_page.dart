@@ -20,16 +20,16 @@ class DoctorHomePage extends StatefulWidget {
 class _DoctorHomePageState extends State<DoctorHomePage> {
   bool _isBlinking = true;
 
-  @override
-  void initState() {
-    super.initState();
-    Timer.periodic(const Duration(milliseconds: 500), (timer) {
-      if (!mounted) return;
-      setState(() {
-        _isBlinking = !_isBlinking;
-      });
-    });
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   Timer.periodic(const Duration(milliseconds: 500), (timer) {
+  //     if (!mounted) return;
+  //     setState(() {
+  //       _isBlinking = !_isBlinking;
+  //     });
+  //   });
+  // }
 
   Future<void> sendEmergencyAlert(String comment) async {
     try {
@@ -83,6 +83,8 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
         'latitude': position.latitude,
         'longitude': position.longitude,
         'timestamp': FieldValue.serverTimestamp(),
+        'closed': false,
+        'committed': false,
       });
 
       print("✅ Emergency alert sent successfully.");
@@ -157,7 +159,7 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
                     if (commentController.text.isNotEmpty) {
                       setState(()=> isLoading = true );
                       await sendEmergencyAlert(commentController.text);
-                      Navigator.pop(context);
+                      if(context.mounted) Navigator.pop(context);
                       setState(()=> isLoading = false );
                     }
                   },
@@ -363,9 +365,11 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
       );
     }
 
+  double deviceWidth = MediaQuery.of(context).size.width;
+
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      width: deviceWidth,
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: Colors.grey[850],
         borderRadius: BorderRadius.circular(20),
@@ -373,6 +377,7 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SizedBox(height: 20),
           const Center(
             child: Text(
               "Emergency Contacts",
@@ -383,17 +388,17 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
           Center(
             child: Wrap(
               spacing: 16,
               runSpacing: 16,
-              children: emergencyContacts.entries.map((entry) {
+              children: [...emergencyContacts.entries.map((entry) {
                 return GestureDetector(
                   onTap: () => showCallDialog(entry.key, entry.value['number']),
                   child: Container(
-                    width: 80,
-                    height: 80,
+                    width: deviceWidth/4-25,
+                    height: deviceWidth/4-25,
                     decoration: BoxDecoration(
                       color: entry.value['color'],
                       borderRadius: BorderRadius.circular(12),
@@ -417,6 +422,8 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
                   ),
                 );
               }).toList(),
+              SizedBox(height: 20,)
+              ],
             ),
           ),
         ],

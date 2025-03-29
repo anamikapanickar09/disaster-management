@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import '../services/api_service.dart';
+// import '../services/api_service.dart';
 import '../services/pop_up.dart';
 
 class UpdatePage extends StatefulWidget {
@@ -68,9 +68,18 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
           return const Center(child: CircularProgressIndicator());
         }
 
-        var alerts = snapshot.data!.docs;
-        alerts.sort((a, b) => (b['timestamp'] as Timestamp).compareTo((a['timestamp'] as Timestamp)));
-        alerts = alerts.where((i) => !i['closed']).toList();
+        var rawAlerts = snapshot.data!.docs;
+        rawAlerts.sort((a, b) => (b['timestamp'] as Timestamp).compareTo((a['timestamp'] as Timestamp)));
+        rawAlerts = rawAlerts.where((i) => !i['closed']).toList();
+
+        List<dynamic> committedCases = [];
+        List<dynamic> notCommittedCases = [];
+        for(var alert in rawAlerts){
+          (alert['committed'] ? committedCases : notCommittedCases).add(alert);
+        }
+        List alerts = [];
+        alerts.addAll(notCommittedCases);
+        alerts.addAll(committedCases);
 
         return ListView.builder(
           itemCount: alerts.length,
@@ -104,20 +113,21 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              FutureBuilder<String>(
-                                future: getPlaceFromCoordinates(alert['latitude'], alert['longitude']),
-                                builder: (context, snapshot) {
-                                  if (snapshot.connectionState == ConnectionState.waiting) {
-                                    return Text('Loading place...');
-                                  } else if (snapshot.hasError) {
-                                    return Text('Error: ${snapshot.error}');
-                                  } else if (snapshot.hasData) {
-                                    return Text(snapshot.data!); // !.split(', ').join(',\n'));
-                                  } else {
-                                    return Container();
-                                  }
-                                },
-                              ),
+                              Text("${alert['latitude']}, ${alert['longitude']}"),
+                              // FutureBuilder<String>(
+                              //   future: getPlaceFromCoordinates(alert['latitude'], alert['longitude']),
+                              //   builder: (context, snapshot) {
+                              //     if (snapshot.connectionState == ConnectionState.waiting) {
+                              //       return Text('Loading place...');
+                              //     } else if (snapshot.hasError) {
+                              //       return Text('Error: ${snapshot.error}');
+                              //     } else if (snapshot.hasData) {
+                              //       return Text(snapshot.data!); // !.split(', ').join(',\n'));
+                              //     } else {
+                              //       return Container();
+                              //     }
+                              //   },
+                              // ),
                             ],
                           ),
                         ),
@@ -239,7 +249,7 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                                     .update({
                                   'closed': true,
                                 });
-                              }
+                              },
                             );
                           },
                           child: SizedBox(width: screenWidth*0.28, child: Center(child: Text('Close Case')),),
