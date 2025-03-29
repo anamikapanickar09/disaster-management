@@ -54,7 +54,7 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
         await _firestore.collection('users').doc(_auth.currentUser?.uid).get();
     return {
       'userType': userDoc['userType']?.toString() ?? 'Unknown',
-      'name': userDoc['name'] ?? 'Anonymous',
+      'name': userDoc.get('name') ?? 'Anonymous',
     };
   }
 
@@ -69,12 +69,13 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
         }
 
         var rawAlerts = snapshot.data!.docs;
-        rawAlerts.sort((a, b) => (b['timestamp'] as Timestamp).compareTo((a['timestamp'] as Timestamp)));
+        rawAlerts.sort((a, b) => (b['timestamp'] as Timestamp)
+            .compareTo((a['timestamp'] as Timestamp)));
         rawAlerts = rawAlerts.where((i) => !i['closed']).toList();
 
         List<dynamic> committedCases = [];
         List<dynamic> notCommittedCases = [];
-        for(var alert in rawAlerts){
+        for (var alert in rawAlerts) {
           (alert['committed'] ? committedCases : notCommittedCases).add(alert);
         }
         List alerts = [];
@@ -86,7 +87,14 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
           itemBuilder: (context, index) {
             var alert = alerts[index];
             DateTime timestamp = (alert['timestamp'] as Timestamp).toDate();
-            var replies = (alert.data() as Map<String, dynamic>).containsKey('replies') ? alert['replies'] : [];
+            var replies =
+                (alert.data() as Map<String, dynamic>).containsKey('replies')
+                    ? alert['replies'] as List<dynamic>
+                    : [];
+            replies.sort((a, b) {
+              return DateTime.parse(b['time'])
+                  .compareTo(DateTime.parse(a['time']));
+            });
 
             TextEditingController commentController = TextEditingController();
 
@@ -113,7 +121,8 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              Text("${alert['latitude']}, ${alert['longitude']}"),
+                              Text(
+                                  "${alert['latitude']}, ${alert['longitude']}"),
                               // FutureBuilder<String>(
                               //   future: getPlaceFromCoordinates(alert['latitude'], alert['longitude']),
                               //   builder: (context, snapshot) {
@@ -134,8 +143,14 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text(DateFormat('dd MMM yyyy').format(timestamp), textAlign: TextAlign.right,),
-                            Text(DateFormat('hh:mm a').format(timestamp), textAlign: TextAlign.right,),
+                            Text(
+                              DateFormat('dd MMM yyyy').format(timestamp),
+                              textAlign: TextAlign.right,
+                            ),
+                            Text(
+                              DateFormat('hh:mm a').format(timestamp),
+                              textAlign: TextAlign.right,
+                            ),
                           ],
                         )
                       ],
@@ -164,7 +179,8 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
                                     '${c['userName']}(${c['userType']})',
@@ -176,8 +192,16 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      Text(DateFormat('dd MMM yyyy').format(DateTime.parse(c['time'])), textAlign: TextAlign.right,),
-                                      Text(DateFormat('hh:mm a').format(DateTime.parse(c['time'])), textAlign: TextAlign.right,),
+                                      Text(
+                                        DateFormat('dd MMM yyyy')
+                                            .format(DateTime.parse(c['time'])),
+                                        textAlign: TextAlign.right,
+                                      ),
+                                      Text(
+                                        DateFormat('hh:mm a')
+                                            .format(DateTime.parse(c['time'])),
+                                        textAlign: TextAlign.right,
+                                      ),
                                     ],
                                   )
                                 ],
@@ -219,40 +243,49 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         ElevatedButton(
-                          onPressed: alert['committed'] ? null : (){
-                            showPopUp(
-                              context,
-                              popUpTitle: Text('Commit Case'),
-                              popUpContent: Text('Are you sure you want to commit the case?'),
-                              function: () async {
-                                await _firestore
-                                    .collection('alerts')
-                                    .doc(alert.id)
-                                    .update({
-                                  'committed': true,
-                                });
-                              }
-                            );
-                          },
-                          child: SizedBox(width: screenWidth*0.28, child: Center(child: Text('Commit Case'))),
+                          onPressed: alert['committed']
+                              ? null
+                              : () {
+                                  showPopUp(context,
+                                      popUpTitle: Text('Commit Case'),
+                                      popUpContent: Text(
+                                          'Are you sure you want to commit the case?'),
+                                      function: () async {
+                                    await _firestore
+                                        .collection('alerts')
+                                        .doc(alert.id)
+                                        .update({
+                                      'committed': true,
+                                    });
+                                  });
+                                },
+                          child: SizedBox(
+                              width: screenWidth * 0.28,
+                              child: Center(child: Text('Commit Case'))),
                         ),
                         ElevatedButton(
-                          onPressed: alert['closed'] ? null : (){
-                            showPopUp(
-                              context,
-                              popUpTitle: Text('Close Case'),
-                              popUpContent: Text('Are you sure you want to close the case?'),
-                              function: () async {
-                                await _firestore
-                                    .collection('alerts')
-                                    .doc(alert.id)
-                                    .update({
-                                  'closed': true,
-                                });
-                              },
-                            );
-                          },
-                          child: SizedBox(width: screenWidth*0.28, child: Center(child: Text('Close Case')),),
+                          onPressed: alert['closed']
+                              ? null
+                              : () {
+                                  showPopUp(
+                                    context,
+                                    popUpTitle: Text('Close Case'),
+                                    popUpContent: Text(
+                                        'Are you sure you want to close the case?'),
+                                    function: () async {
+                                      await _firestore
+                                          .collection('alerts')
+                                          .doc(alert.id)
+                                          .update({
+                                        'closed': true,
+                                      });
+                                    },
+                                  );
+                                },
+                          child: SizedBox(
+                            width: screenWidth * 0.28,
+                            child: Center(child: Text('Close Case')),
+                          ),
                         ),
                       ],
                     ),
@@ -297,69 +330,75 @@ class UpdateCamps extends StatelessWidget {
                   children: [
                     TextField(
                       readOnly: true,
-                      controller: TextEditingController(text: camp['latitude'].toString()),
+                      controller: TextEditingController(
+                          text: camp['latitude'].toString()),
                       decoration: InputDecoration(
                         labelText: 'Latitude',
                       ),
                     ),
                     TextField(
                       readOnly: true,
-                      controller: TextEditingController(text: camp['longitude'].toString()),
+                      controller: TextEditingController(
+                          text: camp['longitude'].toString()),
                       decoration: InputDecoration(
                         labelText: 'Longitude',
                       ),
                     ),
                     TextField(
                       readOnly: true,
-                      controller: TextEditingController(text: camp['userType'].toString()),
+                      controller: TextEditingController(
+                          text: camp['userType'].toString()),
                       decoration: InputDecoration(
                         labelText: 'User Type',
                       ),
                     ),
                     TextField(
                       readOnly: true,
-                      controller: TextEditingController(text: camp['name'].toString()),
+                      controller:
+                          TextEditingController(text: camp['name'].toString()),
                       decoration: InputDecoration(
                         labelText: 'Name',
                       ),
                     ),
                     TextField(
                       readOnly: true,
-                      controller: TextEditingController(text: camp['comment'].toString()),
+                      controller: TextEditingController(
+                          text: camp['comment'].toString()),
                       decoration: InputDecoration(
                         labelText: 'Comment',
                       ),
                     ),
                     TextField(
                       readOnly: true,
-                      controller: TextEditingController(text: (camp['is_open']) ? 'open' : 'closed'),
+                      controller: TextEditingController(
+                          text: (camp['is_open']) ? 'open' : 'closed'),
                       decoration: InputDecoration(
                         labelText: 'status',
                       ),
                     ),
-                    if(camp['is_open']) Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        FilledButton(
-                          onPressed: (){
-                            showPopUp(
-                              context,
-                              popUpTitle: Text('Close Camp'),
-                              popUpContent: Text('Are you sure you want to close the camp?'),
-                              function: () async {
+                    if (camp['is_open'])
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          FilledButton(
+                            onPressed: () {
+                              showPopUp(context,
+                                  popUpTitle: Text('Close Camp'),
+                                  popUpContent: Text(
+                                      'Are you sure you want to close the camp?'),
+                                  function: () async {
                                 await _firestore
-                                  .collection('camps')
-                                  .doc(camp.id)
-                                  .update({
-                                    'is_open': false,
-                                  });
-                              }
-                            );
-                          },
-                          child: const Text('Close Camp'),
-                        ),
-                      ],
-                    ),
+                                    .collection('camps')
+                                    .doc(camp.id)
+                                    .update({
+                                  'is_open': false,
+                                });
+                              });
+                            },
+                            child: const Text('Close Camp'),
+                          ),
+                        ],
+                      ),
                   ],
                 ),
               ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class NotificationPage extends StatelessWidget {
   const NotificationPage({super.key});
@@ -23,14 +24,18 @@ class NotificationPage extends StatelessWidget {
       ),
       body: StreamBuilder(
         stream: FirebaseFirestore.instance
-            .collection('notifications')
-            .orderBy('timestamp', descending: true)
+            .collection('alerts')
+            .where('closed', isEqualTo: false)
+            .where('committed', isEqualTo: false)
+            // .orderBy('timestamp', descending: true)
             .snapshots(),
         builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
-          var notifications = snapshot.data!.docs;
+          List notifications = snapshot.data!.docs;
+          notifications.sort((a, b) => (b['timestamp'] as Timestamp)
+              .compareTo((a['timestamp'] as Timestamp)));
 
           return ListView.builder(
             padding: const EdgeInsets.all(16),
@@ -46,20 +51,55 @@ class NotificationPage extends StatelessWidget {
                 child: ListTile(
                   leading: const Icon(Icons.notifications_active,
                       color: Colors.deepPurple, size: 30),
-                  title: Text(
-                    notification['title'],
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          notification.get("comment"),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          softWrap: true,
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          "${(notification.get("latitude") as double).toStringAsFixed(6)}, ${(notification.get("longitude") as double).toStringAsFixed(6)}",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
+                          softWrap: true,
+                          textAlign: TextAlign
+                              .right, // Align to the right for readability
+                        ),
+                      ),
+                    ],
                   ),
-                  subtitle: Text(
-                    notification['body'],
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
+                  subtitle: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "${notification.get("name")}(${notification.get("userType")})",
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        DateFormat("dd MMM yyyy hh:mm a").format(
+                            (notification.get("timestamp") as Timestamp)
+                                .toDate()),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               );

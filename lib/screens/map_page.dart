@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:location/location.dart';
+import 'package:intl/intl.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -16,9 +17,10 @@ class _MapPageState extends State<MapPage> {
   final MapController _mapController = MapController();
   LatLng? userLocation;
   TextEditingController searchController = TextEditingController();
-  String mapUrlTemplate = "https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}";
+  String mapUrlTemplate =
+      "https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}";
   // String mapUrlTemplate = "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png";
-  late var firebaseSubscription;
+  var firebaseSubscription;
 
   @override
   void initState() {
@@ -45,7 +47,7 @@ class _MapPageState extends State<MapPage> {
     }
 
     LocationData locationData = await location.getLocation();
-    if(mounted){
+    if (mounted) {
       setState(() {
         userLocation = LatLng(locationData.latitude!, locationData.longitude!);
       });
@@ -77,8 +79,10 @@ class _MapPageState extends State<MapPage> {
           height: 40,
           point: LatLng(latitude, longitude),
           child: GestureDetector(
-            onTap: () => _showInfoDialog("Emergency Alert", comment),
-            child: Icon(Icons.location_on, color: data['committed'] ? Colors.yellow[800] : Colors.red, size: 35),
+            onTap: () => _showInfoDialog(data),
+            child: Icon(Icons.location_on,
+                color: data['committed'] ? Colors.yellow[800] : Colors.red,
+                size: 35),
           ),
         );
       }).toList();
@@ -100,7 +104,7 @@ class _MapPageState extends State<MapPage> {
             height: 40,
             point: LatLng(latitude, longitude),
             child: GestureDetector(
-              onTap: () => _showInfoDialog("Camp Location", comment),
+              onTap: () => _showInfoDialog(data),
               child: const Icon(Icons.local_hospital,
                   color: Colors.green, size: 35),
             ),
@@ -137,19 +141,97 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  void _showInfoDialog(String title, String content) {
+  void _showInfoDialog(Map<String, dynamic> alert) {
     showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text(title),
-        content: Text(content),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Close")),
-        ],
-      ),
-    );
+        context: context,
+        builder: (_) {
+          DateTime timestamp = (alert['timestamp'] as Timestamp).toDate();
+          var replies = alert.containsKey('replies') ? alert['replies'] : [];
+          double screenWidth = MediaQuery.of(context).size.width;
+          return AlertDialog(
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${alert['name']}(${alert['userType']})',
+                        style: TextStyle(
+                            fontSize: 23, fontWeight: FontWeight.bold),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        icon: Icon(Icons.close),
+                      )
+                    ],
+                  ),
+                  Text(
+                    alert['comment'],
+                    style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    DateFormat('dd MMM yyyy hh:mm a').format(timestamp),
+                    textAlign: TextAlign.right,
+                  ),
+                  const SizedBox(height: 10),
+                  if (replies.isNotEmpty)
+                    const Text(
+                      'Replies:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ...replies.map((c) => Container(
+                        margin: const EdgeInsets.symmetric(vertical: 4),
+                        padding: const EdgeInsets.all(8),
+                        width: screenWidth * 0.9,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.04),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '${c['userName']}(${c['userType']})',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      DateFormat('dd MMM yyyy')
+                                          .format(DateTime.parse(c['time'])),
+                                      textAlign: TextAlign.right,
+                                    ),
+                                    Text(
+                                      DateFormat('hh:mm a')
+                                          .format(DateTime.parse(c['time'])),
+                                      textAlign: TextAlign.right,
+                                    ),
+                                  ],
+                                )
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(c['reply'] ?? ''),
+                          ],
+                        ),
+                      )),
+                ],
+              ),
+            ),
+          );
+        });
   }
 
   @override
@@ -184,7 +266,7 @@ class _MapPageState extends State<MapPage> {
               options: MapOptions(
                 initialCenter: userLocation ?? LatLng(10.0, 76.0),
                 initialZoom: 10.0,
-                maxZoom: 19,
+                maxZoom: 23,
                 minZoom: 1,
               ),
               children: [
