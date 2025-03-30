@@ -115,7 +115,7 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '${alert['name']}(${alert['userType']})',
+                                "${(alert['userType'][0].toUpperCase() + alert['userType'].substring(1))}: ${alert['name']}",
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -183,7 +183,7 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    '${c['userName']}(${c['userType']})',
+                                    "${(c['userType'][0].toUpperCase() + c['userType'].substring(1))}: ${alert['name']}",
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
@@ -418,7 +418,7 @@ class UpdateCamps extends StatelessWidget {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    '${c['userName']}(${c['userType']})',
+                                    "${(c['userType'][0].toUpperCase() + c['userType'].substring(1))}: ${c['userName']}",
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,

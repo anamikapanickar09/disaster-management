@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:disaster/screens/app_drawer.dart';
 import 'package:disaster/screens/send_public_updates.dart';
+import 'package:disaster/screens/view_updates_page.dart';
 import 'package:disaster/services/pop_up.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -369,7 +370,7 @@ class _VictimHomePageState extends State<VictimHomePage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => NotificationPage()),
+                MaterialPageRoute(builder: (context) => ViewUpdatesPage()),
               );
             },
           ),

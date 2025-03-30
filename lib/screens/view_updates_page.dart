@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
-class NotificationPage extends StatelessWidget {
-  const NotificationPage({super.key});
+class ViewUpdatesPage extends StatelessWidget {
+  const ViewUpdatesPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -24,25 +24,23 @@ class NotificationPage extends StatelessWidget {
       ),
       body: StreamBuilder(
         stream: FirebaseFirestore.instance
-            .collection('alerts')
-            .where('closed', isEqualTo: false)
-            .where('committed', isEqualTo: false)
-            // .orderBy('timestamp', descending: true)
+            .collection('public_updates')
+            .orderBy('timestamp', descending: true)
             .snapshots(),
         builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
           List notifications = snapshot.data!.docs;
-          notifications.sort((a, b) => (b['timestamp'] as Timestamp)
-              .compareTo((a['timestamp'] as Timestamp)));
+          // notifications.sort((a, b) => (b['timestamp'] as Timestamp)
+          //     .compareTo((a['timestamp'] as Timestamp)));
 
           return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: notifications.length,
             itemBuilder: (context, index) {
               var notification = notifications[index];
-              String userType = notification['userType'].toString();
+              String userType = notification.get("userType");
               return Card(
                 color: Colors.grey[900],
                 shape: RoundedRectangleBorder(
@@ -58,7 +56,7 @@ class NotificationPage extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          notification.get("comment"),
+                          notification.get("update"),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -67,18 +65,18 @@ class NotificationPage extends StatelessWidget {
                           softWrap: true,
                         ),
                       ),
-                      Expanded(
-                        child: Text(
-                          "${(notification.get("latitude") as double).toStringAsFixed(6)}, ${(notification.get("longitude") as double).toStringAsFixed(6)}",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                          ),
-                          softWrap: true,
-                          textAlign: TextAlign
-                              .right, // Align to the right for readability
-                        ),
-                      ),
+                      // Expanded(
+                      //   child: Text(
+                      //     "${(notification.get("latitude") as double).toStringAsFixed(6)}, ${(notification.get("longitude") as double).toStringAsFixed(6)}",
+                      //     style: const TextStyle(
+                      //       color: Colors.white,
+                      //       fontSize: 14,
+                      //     ),
+                      //     softWrap: true,
+                      //     textAlign: TextAlign
+                      //         .right, // Align to the right for readability
+                      //   ),
+                      // ),
                     ],
                   ),
                   subtitle: Row(
