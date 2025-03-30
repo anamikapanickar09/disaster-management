@@ -11,10 +11,14 @@ class RegisterVictim extends StatefulWidget {
 }
 
 class _RegisterVictimState extends State<RegisterVictim> {
+  final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController emergencyContactController =
       TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController passwordCheckController = TextEditingController();
+
+  bool isPasswordVisible = false;
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -43,6 +47,7 @@ class _RegisterVictimState extends State<RegisterVictim> {
       );
 
       await _firestore.collection('users').doc(userCredential.user!.uid).set({
+        'name': nameController.text,
         'email': email,
         'emergencyContact': emergencyContact,
         'userType': 'victim',
@@ -79,6 +84,8 @@ class _RegisterVictimState extends State<RegisterVictim> {
     required String label,
     required TextEditingController controller,
     bool obscureText = false,
+    Widget? suffixIcon,
+    TextInputType inputType = TextInputType.text,
   }) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 10),
@@ -90,11 +97,13 @@ class _RegisterVictimState extends State<RegisterVictim> {
       child: TextField(
         controller: controller,
         obscureText: obscureText,
+        keyboardType: inputType,
         style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
           labelText: label,
           labelStyle: const TextStyle(color: Colors.white70),
           border: InputBorder.none,
+          suffixIcon: suffixIcon,
         ),
       ),
     );
@@ -127,6 +136,7 @@ class _RegisterVictimState extends State<RegisterVictim> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            buildInputField(label: "Name", controller: nameController),
             buildInputField(label: "Email", controller: emailController),
             buildInputField(
                 label: "Emergency Contact",
@@ -134,6 +144,20 @@ class _RegisterVictimState extends State<RegisterVictim> {
             buildInputField(
               label: "Password",
               controller: passwordController,
+              obscureText: !isPasswordVisible,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                  color: Colors.white70,
+                ),
+                onPressed: () {
+                  setState(() => isPasswordVisible = !isPasswordVisible);
+                },
+              ),
+            ),
+            buildInputField(
+              label: "Confirm Password",
+              controller: passwordCheckController,
               obscureText: true,
             ),
             const SizedBox(height: 20),

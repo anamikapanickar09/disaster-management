@@ -1,3 +1,4 @@
+import 'package:disaster/screens/admin_home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,26 @@ class _LoginPageState extends State<LoginPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   void _login() async {
+    // var users =
+    //     (await FirebaseFirestore.instance.collection("users").get()).docs;
+
+    // for (var user in users) {
+    //   // await FirebaseFirestore.instance
+    //   //     .collection("users")
+    //   //     .doc(user.id)
+    //   //     .delete();
+    //   _auth.
+    // }
+    // try {
+    //   UserCredential userCredential =
+    //       await _auth.createUserWithEmailAndPassword(
+    //     email: "admin@gmail.com",
+    //     password: "admin123",
+    //   );
+    // } catch (e) {
+    //   print(e);
+    // }
+    // return;
     String username = usernameController.text.trim();
     String password = passwordController.text.trim();
 
@@ -49,24 +70,31 @@ class _LoginPageState extends State<LoginPage> {
               context,
               MaterialPageRoute(
                   builder: (context) => const VolunteerHomePage()));
+        } else if (userType == 'admin') {
+          Navigator.pushReplacement(context,
+              MaterialPageRoute(builder: (context) => const AdminHomePage()));
         }
       } else {
         throw 'User type not found in database';
       }
     } on FirebaseAuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Login failed: ${e.message}"),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Login failed: ${e.message}"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Error: $e"),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error: $e"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

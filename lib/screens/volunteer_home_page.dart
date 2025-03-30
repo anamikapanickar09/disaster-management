@@ -1,77 +1,60 @@
 import 'dart:async';
+import 'package:disaster/screens/app_drawer.dart';
+import 'package:disaster/screens/send_public_updates.dart';
+import 'package:disaster/services/pop_up.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'map_page.dart';
-import 'login_page.dart';
 import 'notification_page.dart';
-import 'add_camp_page.dart';
+import 'login_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'update_page_state.dart';
+// import 'add_camp_page.dart';
 
 class VolunteerHomePage extends StatefulWidget {
   const VolunteerHomePage({super.key});
 
   @override
-  _VolunteerHomePageState createState() => _VolunteerHomePageState();
+  State<VolunteerHomePage> createState() => _VolunteerHomePageState();
 }
 
 class _VolunteerHomePageState extends State<VolunteerHomePage> {
-  bool _isBlinking = true;
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController userTypeController = TextEditingController();
+  // bool _isBlinking = true;
 
-  @override
-  void initState() {
-    super.initState();
-    Timer.periodic(const Duration(milliseconds: 500), (timer) {
-      if (!mounted) return;
-      setState(() {
-        _isBlinking = !_isBlinking;
-      });
-    });
-  }
-
-  Future<Map<String, String>> getCurrentUserDetails() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final docSnapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-      if (docSnapshot.exists) {
-        final data = docSnapshot.data();
-        return {
-          'name': data?['name'] ?? '',
-          'userType': data?['userType'] ?? '',
-        };
-      }
-    }
-    return {'name': '', 'userType': ''};
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   Timer.periodic(const Duration(milliseconds: 500), (timer) {
+  //     if (!mounted) return;
+  //     setState(() {
+  //       _isBlinking = !_isBlinking;
+  //     });
+  //   });
+  // }
 
   Future<void> sendEmergencyAlert(String comment) async {
     try {
-      // Get current user's ID
       String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
       if (uid.isEmpty) {
-        print("❌ No user logged in.");
+        // print("❌ No user logged in.");
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('No user logged in!')),
         );
         return;
       }
 
-      // Fetch user details from Firestore
       DocumentSnapshot userDoc =
           await FirebaseFirestore.instance.collection('users').doc(uid).get();
 
       if (!userDoc.exists) {
-        print("❌ User details not found.");
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User details not found!')),
-        );
+        // print("❌ User details not found.");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('User details not found!')),
+          );
+        }
         return;
       }
 
@@ -80,27 +63,24 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
       String name = userDetails['name'] ?? 'Unknown';
       String userType = userDetails['userType'] ?? 'Unknown';
 
-      // Check location permissions
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          print("❌ Location permission denied.");
+          // print("❌ Location permission denied.");
           return;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        print("❌ Location permissions are permanently denied.");
+        // print("❌ Location permissions are permanently denied.");
         return;
       }
 
-      // Get current location
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      // Send the alert
       await FirebaseFirestore.instance.collection('alerts').add({
         'name': name,
         'userType': userType,
@@ -108,214 +88,235 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
         'latitude': position.latitude,
         'longitude': position.longitude,
         'timestamp': FieldValue.serverTimestamp(),
+        'closed': false,
+        'committed': false,
       });
 
-      print("✅ Emergency alert sent successfully.");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Emergency alert sent!')),
-      );
+      // print("✅ Emergency alert sent successfully.");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Emergency alert sent!')),
+        );
+      }
     } catch (e) {
-      print("❌ Error sending emergency alert: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error sending alert: $e')),
-      );
+      // print("❌ Error sending emergency alert: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error sending alert: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> sendPublicUpdates(String update) async {
+    try {
+      String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        // print("❌ No user logged in.");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No user logged in!')),
+        );
+        return;
+      }
+
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+      if (!userDoc.exists) {
+        // print("❌ User details not found.");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('User details not found!')),
+          );
+        }
+        return;
+      }
+
+      Map<String, dynamic> userDetails = userDoc.data() as Map<String, dynamic>;
+
+      String name = userDetails['name'] ?? 'Unknown';
+      String userType = userDetails['userType'] ?? 'Unknown';
+
+      await FirebaseFirestore.instance.collection('public_updates').add({
+        'name': name,
+        'userType': userType,
+        'update': update,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      // print("✅ Emergency alert sent successfully.");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Public update sent!')),
+        );
+      }
+    } catch (e) {
+      // print("❌ Error sending emergency alert: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error sending public update: $e')),
+        );
+      }
     }
   }
 
   void _showEmergencyAlert(BuildContext context) {
+    bool isLoading = false;
     TextEditingController commentController = TextEditingController();
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[900], // Dark background
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: const Text(
-            "Emergency Alert",
-            style: TextStyle(color: Colors.white),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                "Send an emergency alert to other users.",
-                style: TextStyle(color: Colors.white70),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: commentController,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: Colors.grey[800],
-                  labelText: "Emergency Comments",
-                  labelStyle: const TextStyle(color: Colors.white70),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+        return StatefulBuilder(builder: (BuildContext context, setState) {
+          return AlertDialog(
+            backgroundColor: Colors.grey[900],
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: const Text(
+              "Emergency Alert",
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!isLoading)
+                  const Text(
+                    "Send an emergency alert to other users.",
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                const SizedBox(height: 10),
+                if (!isLoading)
+                  TextField(
+                    controller: commentController,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.grey[800],
+                      labelText: "Emergency Comments",
+                      labelStyle: const TextStyle(color: Colors.white70),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    maxLines: 3,
+                  ),
+                if (isLoading)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 10),
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+                    ),
+                  ),
+              ],
+            ),
+            actions: [
+              if (!isLoading)
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(color: Colors.white70),
                   ),
                 ),
-                style: const TextStyle(color: Colors.white),
-                maxLines: 3,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                "Cancel",
-                style: TextStyle(color: Colors.white70),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (commentController.text.isNotEmpty) {
-                  await sendEmergencyAlert(
-                    commentController.text,
-                  );
-                  Navigator.pop(context);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text("Send Alert"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showUpdateAlerts(BuildContext context) async {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Colors.grey[900],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: const Text(
-            "Nearby Alerts",
-            style: TextStyle(color: Colors.white),
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: StreamBuilder(
-              stream:
-                  FirebaseFirestore.instance.collection('alerts').snapshots(),
-              builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                    ),
-                  );
-                }
-                var alerts = snapshot.data!.docs;
-                return ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: alerts.length,
-                  itemBuilder: (context, index) {
-                    var alert = alerts[index];
-                    return Container(
-                      margin: const EdgeInsets.symmetric(vertical: 6),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[850],
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ListTile(
-                        title: Text(
-                          alert['comment'],
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        subtitle: Text(
-                          "Lat: ${alert['latitude']}, Lng: ${alert['longitude']}",
-                          style: const TextStyle(
-                            color: Colors.white70,
-                          ),
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(
-                            Icons.edit,
-                            color: Colors.deepPurple,
-                          ),
-                          onPressed: () {
-                            _showEditAlertDialog(
-                              context,
-                              alert.id,
-                              alert['comment'],
-                            );
-                          },
-                        ),
-                      ),
-                    );
+              if (!isLoading)
+                TextButton(
+                  onPressed: () async {
+                    if (commentController.text.isNotEmpty) {
+                      setState(() => isLoading = true);
+                      await sendEmergencyAlert(commentController.text);
+                      if (context.mounted) Navigator.pop(context);
+                      setState(() => isLoading = false);
+                    }
                   },
-                );
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                "Close",
-                style: TextStyle(color: Colors.white70),
-              ),
-            ),
-          ],
-        );
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.black26,
+                  ),
+                  child: Text(
+                    "Send Alert",
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+            ],
+          );
+        });
       },
     );
   }
 
-  void _showEditAlertDialog(
-      BuildContext context, String alertId, String oldComment) {
-    TextEditingController editController =
-        TextEditingController(text: oldComment);
+  void _showSendUpdates(BuildContext context) {
+    bool isLoading = false;
+    TextEditingController commentController = TextEditingController();
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Edit Alert"),
-          content: TextField(
-            controller: editController,
-            decoration: const InputDecoration(
-              labelText: "Updated Comment",
-              border: OutlineInputBorder(),
+        return StatefulBuilder(builder: (BuildContext context, setState) {
+          return AlertDialog(
+            backgroundColor: Colors.grey[900],
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-            maxLines: 3,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
+            title: const Text(
+              "Send Public Updates",
             ),
-            ElevatedButton(
-              onPressed: () async {
-                await FirebaseFirestore.instance
-                    .collection('alerts')
-                    .doc(alertId)
-                    .update({'comment': editController.text});
-                Navigator.pop(context);
-                Navigator.pop(context);
-              },
-              style:
-                  ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
-              child: const Text("Update"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!isLoading)
+                  const Text(
+                    "Send necessary updates to the public.",
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                const SizedBox(height: 10),
+                if (!isLoading)
+                  TextField(
+                    controller: commentController,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.grey[800],
+                      labelText: "Type infos here",
+                      labelStyle: const TextStyle(color: Colors.white70),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    maxLines: 3,
+                  ),
+                if (isLoading)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 10),
+                    child: CircularProgressIndicator(),
+                  ),
+              ],
             ),
-          ],
-        );
+            actions: [
+              if (!isLoading)
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+              if (!isLoading)
+                TextButton(
+                  onPressed: () async {
+                    if (commentController.text.isNotEmpty) {
+                      setState(() => isLoading = true);
+                      await sendPublicUpdates(commentController.text);
+                      if (context.mounted) Navigator.pop(context);
+                      setState(() => isLoading = false);
+                    }
+                  },
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.black26,
+                  ),
+                  child: Text(
+                    "Send Update",
+                  ),
+                ),
+            ],
+          );
+        });
       },
     );
   }
@@ -323,19 +324,45 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.black,
+      drawer: AppDrawer(),
       appBar: AppBar(
-        title: const Text(
-          "Volunteer Dashboard",
-          style: TextStyle(
-            color: Colors.green,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
+        title: Column(
+          children: [
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircleAvatar(
+                  foregroundImage: AssetImage("assets/logo.png"),
+                  backgroundColor: Colors.transparent,
+                  radius: 18,
+                ),
+                SizedBox(
+                  width: 10,
+                ),
+                Text(
+                  "Crisis Connect",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
         backgroundColor: Colors.black,
         elevation: 0,
         centerTitle: true,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu), // Hamburger Icon
+            onPressed: () {
+              Scaffold.of(context).openDrawer(); // Opens drawer
+            },
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications, color: Colors.white),
@@ -346,25 +373,34 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
               );
             },
           ),
-          IconButton(
-            icon: const Icon(
-              Icons.logout,
-              color:
-                  Color.from(alpha: 1, red: 0.298, green: 0.686, blue: 0.314),
-            ),
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginPage()),
-              );
-            },
-          ),
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            // Stack(
+            //   clipBehavior: Clip.none, // ✅ Allows overflow
+            //   children: [
+            //     Container(color: Colors.white), // Main content
+            //     Positioned(
+            //       top: -10, // Moves widget up into AppBar
+            //       left: 110,
+            //       right: 20,
+            //       child: Text(
+            //         "HOPE IN CRISIS, HELP AT HAND",
+            //         style: TextStyle(fontSize: 15),
+            //       ),
+            //     ),
+            //   ],
+            // ),
+            Text(
+              "HOPE IN CRISIS, HELP AT HAND",
+              style: TextStyle(fontSize: 15),
+            ),
+            SizedBox(
+              height: 20,
+            ),
             Expanded(
               child: _buildFeatureBox(
                 title: "Map View",
@@ -384,7 +420,8 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
               child: _buildFeatureBox(
                 title: "Alert",
                 icon: Icons.warning,
-                iconColor: _isBlinking ? Colors.red : Colors.transparent,
+                iconColor: Colors.red,
+                // iconColor: _isBlinking ? Colors.red : Colors.transparent,
                 textColor: Colors.red,
                 onTap: () => _showEmergencyAlert(context),
               ),
@@ -392,16 +429,11 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
             const SizedBox(height: 16),
             Expanded(
               child: _buildFeatureBox(
-                title: "Add Camp Details",
-                icon: Icons.local_hospital,
+                title: "Send Public Updates",
+                icon: Icons.update,
                 iconColor: const Color.fromRGBO(76, 175, 80, 1),
                 textColor: Colors.green,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => AddCampPage()),
-                  );
-                },
+                onTap: () => _showSendUpdates(context),
               ),
             ),
             const SizedBox(height: 16),
@@ -468,17 +500,20 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
       'Police': {'number': '100', 'color': Colors.red},
       'Ambulance': {'number': '102', 'color': Colors.blue},
       'Fire': {'number': '101', 'color': Colors.orange},
-      'Medical': {'number': '+918547243687', 'color': Colors.green}
+      'Medical': {'number': '+916238771626', 'color': Colors.green}
     };
 
     Future<void> makeCall(String number) async {
       final Uri callUri = Uri(scheme: 'tel', path: number);
       if (await launchUrl(callUri)) {
-        print('✅ Calling $number');
+        // print('✅ Calling $number');
+        return;
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not launch call')),
-        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not launch call')),
+          );
+        }
       }
     }
 
@@ -507,9 +542,11 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
       );
     }
 
+    double deviceWidth = MediaQuery.of(context).size.width;
+
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      width: deviceWidth,
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: Colors.grey[850],
         borderRadius: BorderRadius.circular(20),
@@ -517,6 +554,7 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SizedBox(height: 20),
           const Center(
             child: Text(
               "Emergency Contacts",
@@ -527,40 +565,47 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
           Center(
             child: Wrap(
               spacing: 16,
               runSpacing: 16,
-              children: emergencyContacts.entries.map((entry) {
-                return GestureDetector(
-                  onTap: () => showCallDialog(entry.key, entry.value['number']),
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: entry.value['color'],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.phone, color: Colors.white, size: 24),
-                        const SizedBox(height: 6),
-                        Text(
-                          entry.key,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
+              children: [
+                ...emergencyContacts.entries.map((entry) {
+                  return GestureDetector(
+                    onTap: () =>
+                        showCallDialog(entry.key, entry.value['number']),
+                    child: Container(
+                      width: deviceWidth / 4 - 25,
+                      height: deviceWidth / 4 - 25,
+                      decoration: BoxDecoration(
+                        color: entry.value['color'],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.phone,
+                              color: Colors.white, size: 24),
+                          const SizedBox(height: 6),
+                          Text(
+                            entry.key,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              }).toList(),
+                  );
+                }),
+                SizedBox(
+                  height: 20,
+                )
+              ],
             ),
           ),
         ],

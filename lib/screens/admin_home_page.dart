@@ -1,7 +1,4 @@
 import 'dart:async';
-import 'package:disaster/screens/app_drawer.dart';
-import 'package:disaster/screens/send_public_updates.dart';
-import 'package:disaster/services/pop_up.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
@@ -11,16 +8,16 @@ import 'login_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'update_page_state.dart';
-// import 'add_camp_page.dart';
+import 'add_camp_page.dart';
 
-class VictimHomePage extends StatefulWidget {
-  const VictimHomePage({super.key});
+class AdminHomePage extends StatefulWidget {
+  const AdminHomePage({super.key});
 
   @override
-  State<VictimHomePage> createState() => _VictimHomePageState();
+  State<AdminHomePage> createState() => _AdminHomePageState();
 }
 
-class _VictimHomePageState extends State<VictimHomePage> {
+class _AdminHomePageState extends State<AdminHomePage> {
   // bool _isBlinking = true;
 
   // @override
@@ -108,58 +105,6 @@ class _VictimHomePageState extends State<VictimHomePage> {
     }
   }
 
-  Future<void> sendPublicUpdates(String update) async {
-    try {
-      String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
-      if (uid.isEmpty) {
-        // print("❌ No user logged in.");
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No user logged in!')),
-        );
-        return;
-      }
-
-      DocumentSnapshot userDoc =
-          await FirebaseFirestore.instance.collection('users').doc(uid).get();
-
-      if (!userDoc.exists) {
-        // print("❌ User details not found.");
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('User details not found!')),
-          );
-        }
-        return;
-      }
-
-      Map<String, dynamic> userDetails = userDoc.data() as Map<String, dynamic>;
-
-      String name = userDetails['name'] ?? 'Unknown';
-      String userType = userDetails['userType'] ?? 'Unknown';
-
-      await FirebaseFirestore.instance.collection('public_updates').add({
-        'name': name,
-        'userType': userType,
-        'update': update,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-
-      // print("✅ Emergency alert sent successfully.");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Public update sent!')),
-        );
-      }
-    } catch (e) {
-      // print("❌ Error sending emergency alert: $e");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error sending public update: $e')),
-        );
-      }
-    }
-  }
-
   void _showEmergencyAlert(BuildContext context) {
     bool isLoading = false;
     TextEditingController commentController = TextEditingController();
@@ -242,127 +187,24 @@ class _VictimHomePageState extends State<VictimHomePage> {
     );
   }
 
-  void _showSendUpdates(BuildContext context) {
-    bool isLoading = false;
-    TextEditingController commentController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(builder: (BuildContext context, setState) {
-          return AlertDialog(
-            backgroundColor: Colors.grey[900],
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: const Text(
-              "Send Public Updates",
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (!isLoading)
-                  const Text(
-                    "Send necessary updates to the public.",
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                const SizedBox(height: 10),
-                if (!isLoading)
-                  TextField(
-                    controller: commentController,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.grey[800],
-                      labelText: "Type infos here",
-                      labelStyle: const TextStyle(color: Colors.white70),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                    maxLines: 3,
-                  ),
-                if (isLoading)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 10),
-                    child: CircularProgressIndicator(),
-                  ),
-              ],
-            ),
-            actions: [
-              if (!isLoading)
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    "Cancel",
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                ),
-              if (!isLoading)
-                TextButton(
-                  onPressed: () async {
-                    if (commentController.text.isNotEmpty) {
-                      setState(() => isLoading = true);
-                      await sendPublicUpdates(commentController.text);
-                      if (context.mounted) Navigator.pop(context);
-                      setState(() => isLoading = false);
-                    }
-                  },
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.black26,
-                  ),
-                  child: Text(
-                    "Send Update",
-                  ),
-                ),
-            ],
-          );
-        });
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.black,
-      drawer: AppDrawer(),
       appBar: AppBar(
-        title: Column(
-          children: [
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircleAvatar(
-                  foregroundImage: AssetImage("assets/logo.png"),
-                  backgroundColor: Colors.transparent,
-                  radius: 18,
-                ),
-                SizedBox(
-                  width: 10,
-                ),
-                Text(
-                  "Crisis Connect",
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ],
+        title: const Text(
+          "Admin",
+          style: TextStyle(
+            color: Color.fromRGBO(76, 175, 80, 1),
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         backgroundColor: Colors.black,
         elevation: 0,
         centerTitle: true,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: Icon(Icons.menu), // Hamburger Icon
-            onPressed: () {
-              Scaffold.of(context).openDrawer(); // Opens drawer
-            },
-          ),
-        ),
+        leading: SizedBox(),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications, color: Colors.white),
@@ -373,34 +215,25 @@ class _VictimHomePageState extends State<VictimHomePage> {
               );
             },
           ),
+          IconButton(
+            icon:
+                const Icon(Icons.logout, color: Color.fromRGBO(76, 175, 80, 1)),
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              if (context.mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              }
+            },
+          ),
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Stack(
-            //   clipBehavior: Clip.none, // ✅ Allows overflow
-            //   children: [
-            //     Container(color: Colors.white), // Main content
-            //     Positioned(
-            //       top: -10, // Moves widget up into AppBar
-            //       left: 110,
-            //       right: 20,
-            //       child: Text(
-            //         "HOPE IN CRISIS, HELP AT HAND",
-            //         style: TextStyle(fontSize: 15),
-            //       ),
-            //     ),
-            //   ],
-            // ),
-            Text(
-              "HOPE IN CRISIS, HELP AT HAND",
-              style: TextStyle(fontSize: 15),
-            ),
-            SizedBox(
-              height: 20,
-            ),
             Expanded(
               child: _buildFeatureBox(
                 title: "Map View",
@@ -418,36 +251,33 @@ class _VictimHomePageState extends State<VictimHomePage> {
             const SizedBox(height: 16),
             Expanded(
               child: _buildFeatureBox(
-                title: "Alert",
-                icon: Icons.warning,
-                iconColor: Colors.red,
-                // iconColor: _isBlinking ? Colors.red : Colors.transparent,
-                textColor: Colors.red,
-                onTap: () => _showEmergencyAlert(context),
+                title: "Add Camp Details",
+                icon: Icons.local_hospital,
+                iconColor: const Color.fromRGBO(76, 175, 80, 1),
+                textColor: Colors.green,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AddCampPage()),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 16),
             Expanded(
               child: _buildFeatureBox(
-                  title: "AI Help",
-                  icon: Icons.help,
-                  iconColor: const Color.fromRGBO(76, 175, 80, 1),
-                  textColor: Colors.green,
-                  // onTap: () => showPopUp(context,
-                  //     function: () {},
-                  //     popUpContent: Text(
-                  //       "Work under progress",
-                  //       style: TextStyle(fontSize: 20),
-                  //     ),
-                  //     dismissible: true),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(
-                            "AI is future. This is present.\n Yesterday is history, Tomrrow is mystery, and today is a gift. Thats why we call it a present. bye")));
-                  }),
+                title: "Alerts & Camps",
+                icon: Icons.edit,
+                iconColor: Colors.orange,
+                textColor: Colors.orange,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => UpdatePage()),
+                  );
+                },
+              ),
             ),
-            const SizedBox(height: 20),
-            _buildEmergencyContactsBox(context),
           ],
         ),
       ),
@@ -495,7 +325,7 @@ class _VictimHomePageState extends State<VictimHomePage> {
       'Police': {'number': '100', 'color': Colors.red},
       'Ambulance': {'number': '102', 'color': Colors.blue},
       'Fire': {'number': '101', 'color': Colors.orange},
-      'Helpline': {'number': '+918547243687', 'color': Colors.green}
+      'Volunteer': {'number': '+918547243687', 'color': Colors.green}
     };
 
     Future<void> makeCall(String number) async {

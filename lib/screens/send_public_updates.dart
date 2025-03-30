@@ -3,14 +3,14 @@ import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class AddCampPage extends StatefulWidget {
-  const AddCampPage({super.key});
+class SendPublicUpdatesPage extends StatefulWidget {
+  const SendPublicUpdatesPage({super.key});
 
   @override
-  _AddCampPageState createState() => _AddCampPageState();
+  _SendPublicUpdatesPageState createState() => _SendPublicUpdatesPageState();
 }
 
-class _AddCampPageState extends State<AddCampPage> {
+class _SendPublicUpdatesPageState extends State<SendPublicUpdatesPage> {
   final TextEditingController _detailsController = TextEditingController();
   bool _isSubmitting = false;
 
@@ -35,30 +35,11 @@ class _AddCampPageState extends State<AddCampPage> {
       String name = userDetails['name'] ?? 'Unknown';
       String userType = userDetails['userType'] ?? 'Unknown';
 
-      // Check location permissions
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          throw "Location permission denied.";
-        }
-      }
-      if (permission == LocationPermission.deniedForever) {
-        throw "Location permissions are permanently denied.";
-      }
-
-      // Get current location
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-
       // Store data in Firebase
-      await FirebaseFirestore.instance.collection('camps').add({
+      await FirebaseFirestore.instance.collection('public_updates').add({
         'name': name,
         'userType': userType,
         'comment': _detailsController.text,
-        'latitude': position.latitude,
-        'longitude': position.longitude,
         'timestamp': FieldValue.serverTimestamp(),
         'is_open': true,
       });
@@ -73,7 +54,7 @@ class _AddCampPageState extends State<AddCampPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Camp details added!')),
+          const SnackBar(content: Text('✅ Public Updates Sent!')),
         );
         Navigator.pop(context);
       }

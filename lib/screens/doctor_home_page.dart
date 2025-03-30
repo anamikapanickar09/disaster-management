@@ -1,24 +1,27 @@
 import 'dart:async';
+import 'package:disaster/screens/app_drawer.dart';
+import 'package:disaster/screens/send_public_updates.dart';
+import 'package:disaster/services/pop_up.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 import 'map_page.dart';
 import 'notification_page.dart';
 import 'login_page.dart';
-import 'add_camp_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'update_page_state.dart'; // Import the new UpdatePage
+import 'update_page_state.dart';
+// import 'add_camp_page.dart';
 
 class DoctorHomePage extends StatefulWidget {
   const DoctorHomePage({super.key});
 
   @override
-  _DoctorHomePageState createState() => _DoctorHomePageState();
+  State<DoctorHomePage> createState() => _DoctorHomePageState();
 }
 
 class _DoctorHomePageState extends State<DoctorHomePage> {
-  bool _isBlinking = true;
+  // bool _isBlinking = true;
 
   // @override
   // void initState() {
@@ -35,7 +38,7 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
     try {
       String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
       if (uid.isEmpty) {
-        print("❌ No user logged in.");
+        // print("❌ No user logged in.");
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('No user logged in!')),
         );
@@ -46,10 +49,12 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
           await FirebaseFirestore.instance.collection('users').doc(uid).get();
 
       if (!userDoc.exists) {
-        print("❌ User details not found.");
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User details not found!')),
-        );
+        // print("❌ User details not found.");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('User details not found!')),
+          );
+        }
         return;
       }
 
@@ -62,13 +67,13 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          print("❌ Location permission denied.");
+          // print("❌ Location permission denied.");
           return;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        print("❌ Location permissions are permanently denied.");
+        // print("❌ Location permissions are permanently denied.");
         return;
       }
 
@@ -87,15 +92,71 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
         'committed': false,
       });
 
-      print("✅ Emergency alert sent successfully.");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Emergency alert sent!')),
-      );
+      // print("✅ Emergency alert sent successfully.");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Emergency alert sent!')),
+        );
+      }
     } catch (e) {
-      print("❌ Error sending emergency alert: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error sending alert: $e')),
-      );
+      // print("❌ Error sending emergency alert: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error sending alert: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> sendPublicUpdates(String update) async {
+    try {
+      String uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        // print("❌ No user logged in.");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No user logged in!')),
+        );
+        return;
+      }
+
+      DocumentSnapshot userDoc =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+      if (!userDoc.exists) {
+        // print("❌ User details not found.");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('User details not found!')),
+          );
+        }
+        return;
+      }
+
+      Map<String, dynamic> userDetails = userDoc.data() as Map<String, dynamic>;
+
+      String name = userDetails['name'] ?? 'Unknown';
+      String userType = userDetails['userType'] ?? 'Unknown';
+
+      await FirebaseFirestore.instance.collection('public_updates').add({
+        'name': name,
+        'userType': userType,
+        'update': update,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      // print("✅ Emergency alert sent successfully.");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Public update sent!')),
+        );
+      }
+    } catch (e) {
+      // print("❌ Error sending emergency alert: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error sending public update: $e')),
+        );
+      }
     }
   }
 
@@ -105,25 +166,26 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, setState) {
-            return AlertDialog(
-              backgroundColor: Colors.grey[900],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              title: const Text(
-                "Emergency Alert",
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if(!isLoading) const Text(
+        return StatefulBuilder(builder: (BuildContext context, setState) {
+          return AlertDialog(
+            backgroundColor: Colors.grey[900],
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: const Text(
+              "Emergency Alert",
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!isLoading)
+                  const Text(
                     "Send an emergency alert to other users.",
                     style: TextStyle(color: Colors.white70),
                   ),
-                  const SizedBox(height: 10),
-                  if(!isLoading) TextField(
+                const SizedBox(height: 10),
+                if (!isLoading)
+                  TextField(
                     controller: commentController,
                     decoration: InputDecoration(
                       filled: true,
@@ -137,30 +199,32 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
                     ),
                     maxLines: 3,
                   ),
-                  if (isLoading)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 10),
-                      child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
-                      ),
+                if (isLoading)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 10),
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
                     ),
-                ],
-              ),
-              actions: [
-                if(!isLoading) TextButton(
+                  ),
+              ],
+            ),
+            actions: [
+              if (!isLoading)
+                TextButton(
                   onPressed: () => Navigator.pop(context),
                   child: const Text(
                     "Cancel",
                     style: TextStyle(color: Colors.white70),
                   ),
                 ),
-                if(!isLoading) TextButton(
+              if (!isLoading)
+                TextButton(
                   onPressed: () async {
                     if (commentController.text.isNotEmpty) {
-                      setState(()=> isLoading = true );
+                      setState(() => isLoading = true);
                       await sendEmergencyAlert(commentController.text);
-                      if(context.mounted) Navigator.pop(context);
-                      setState(()=> isLoading = false );
+                      if (context.mounted) Navigator.pop(context);
+                      setState(() => isLoading = false);
                     }
                   },
                   style: TextButton.styleFrom(
@@ -171,11 +235,88 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
                     style: TextStyle(color: Colors.red),
                   ),
                 ),
-              ],
-            );
+            ],
+          );
+        });
+      },
+    );
+  }
 
-          }
-        );
+  void _showSendUpdates(BuildContext context) {
+    bool isLoading = false;
+    TextEditingController commentController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(builder: (BuildContext context, setState) {
+          return AlertDialog(
+            backgroundColor: Colors.grey[900],
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: const Text(
+              "Send Public Updates",
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!isLoading)
+                  const Text(
+                    "Send necessary updates to the public.",
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                const SizedBox(height: 10),
+                if (!isLoading)
+                  TextField(
+                    controller: commentController,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.grey[800],
+                      labelText: "Type infos here",
+                      labelStyle: const TextStyle(color: Colors.white70),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    maxLines: 3,
+                  ),
+                if (isLoading)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 10),
+                    child: CircularProgressIndicator(),
+                  ),
+              ],
+            ),
+            actions: [
+              if (!isLoading)
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+              if (!isLoading)
+                TextButton(
+                  onPressed: () async {
+                    if (commentController.text.isNotEmpty) {
+                      setState(() => isLoading = true);
+                      await sendPublicUpdates(commentController.text);
+                      if (context.mounted) Navigator.pop(context);
+                      setState(() => isLoading = false);
+                    }
+                  },
+                  style: TextButton.styleFrom(
+                    backgroundColor: Colors.black26,
+                  ),
+                  child: Text(
+                    "Send Update",
+                  ),
+                ),
+            ],
+          );
+        });
       },
     );
   }
@@ -185,18 +326,43 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.black,
+      drawer: AppDrawer(),
       appBar: AppBar(
-        title: const Text(
-          "Doctor Dashboard",
-          style: TextStyle(
-            color: Color.fromRGBO(76, 175, 80, 1),
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
+        title: Column(
+          children: [
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircleAvatar(
+                  foregroundImage: AssetImage("assets/logo.png"),
+                  backgroundColor: Colors.transparent,
+                  radius: 18,
+                ),
+                SizedBox(
+                  width: 10,
+                ),
+                Text(
+                  "Crisis Connect",
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
         backgroundColor: Colors.black,
         elevation: 0,
         centerTitle: true,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu), // Hamburger Icon
+            onPressed: () {
+              Scaffold.of(context).openDrawer(); // Opens drawer
+            },
+          ),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications, color: Colors.white),
@@ -207,22 +373,34 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
               );
             },
           ),
-          IconButton(
-            icon:
-                const Icon(Icons.logout, color: Color.fromRGBO(76, 175, 80, 1)),
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginPage()),
-              );
-            },
-          ),
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            // Stack(
+            //   clipBehavior: Clip.none, // ✅ Allows overflow
+            //   children: [
+            //     Container(color: Colors.white), // Main content
+            //     Positioned(
+            //       top: -10, // Moves widget up into AppBar
+            //       left: 110,
+            //       right: 20,
+            //       child: Text(
+            //         "HOPE IN CRISIS, HELP AT HAND",
+            //         style: TextStyle(fontSize: 15),
+            //       ),
+            //     ),
+            //   ],
+            // ),
+            Text(
+              "HOPE IN CRISIS, HELP AT HAND",
+              style: TextStyle(fontSize: 15),
+            ),
+            SizedBox(
+              height: 20,
+            ),
             Expanded(
               child: _buildFeatureBox(
                 title: "Map View",
@@ -242,7 +420,8 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
               child: _buildFeatureBox(
                 title: "Alert",
                 icon: Icons.warning,
-                iconColor: _isBlinking ? Colors.red : Colors.transparent,
+                iconColor: Colors.red,
+                // iconColor: _isBlinking ? Colors.red : Colors.transparent,
                 textColor: Colors.red,
                 onTap: () => _showEmergencyAlert(context),
               ),
@@ -250,16 +429,11 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
             const SizedBox(height: 16),
             Expanded(
               child: _buildFeatureBox(
-                title: "Add Camp Details",
-                icon: Icons.local_hospital,
+                title: "Send Public Updates",
+                icon: Icons.update,
                 iconColor: const Color.fromRGBO(76, 175, 80, 1),
                 textColor: Colors.green,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => AddCampPage()),
-                  );
-                },
+                onTap: () => _showSendUpdates(context),
               ),
             ),
             const SizedBox(height: 16),
@@ -332,11 +506,14 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
     Future<void> makeCall(String number) async {
       final Uri callUri = Uri(scheme: 'tel', path: number);
       if (await launchUrl(callUri)) {
-        print('✅ Calling $number');
+        // print('✅ Calling $number');
+        return;
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not launch call')),
-        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not launch call')),
+          );
+        }
       }
     }
 
@@ -365,7 +542,7 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
       );
     }
 
-  double deviceWidth = MediaQuery.of(context).size.width;
+    double deviceWidth = MediaQuery.of(context).size.width;
 
     return Container(
       width: deviceWidth,
@@ -393,36 +570,41 @@ class _DoctorHomePageState extends State<DoctorHomePage> {
             child: Wrap(
               spacing: 16,
               runSpacing: 16,
-              children: [...emergencyContacts.entries.map((entry) {
-                return GestureDetector(
-                  onTap: () => showCallDialog(entry.key, entry.value['number']),
-                  child: Container(
-                    width: deviceWidth/4-25,
-                    height: deviceWidth/4-25,
-                    decoration: BoxDecoration(
-                      color: entry.value['color'],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.phone, color: Colors.white, size: 24),
-                        const SizedBox(height: 6),
-                        Text(
-                          entry.key,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
+              children: [
+                ...emergencyContacts.entries.map((entry) {
+                  return GestureDetector(
+                    onTap: () =>
+                        showCallDialog(entry.key, entry.value['number']),
+                    child: Container(
+                      width: deviceWidth / 4 - 25,
+                      height: deviceWidth / 4 - 25,
+                      decoration: BoxDecoration(
+                        color: entry.value['color'],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.phone,
+                              color: Colors.white, size: 24),
+                          const SizedBox(height: 6),
+                          Text(
+                            entry.key,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              }).toList(),
-              SizedBox(height: 20,)
+                  );
+                }),
+                SizedBox(
+                  height: 20,
+                )
               ],
             ),
           ),
