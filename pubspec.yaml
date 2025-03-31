@@ -58,6 +58,7 @@ flutter:
   assets:
     - assets/avatar.png
     - assets/logo.png
+    - assets/earth_network.png
 
 dependency_overrides:
   flutter_keyboard_visibility: ^6.0.0

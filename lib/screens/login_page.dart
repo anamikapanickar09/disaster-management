@@ -2,6 +2,7 @@ import 'package:disaster/screens/admin_home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'register_doctor.dart';
 import 'register_victim.dart';
@@ -118,52 +119,77 @@ class _LoginPageState extends State<LoginPage> {
       // backgroundColor: Colors.black,
       body: Stack(
         children: [
-          Positioned(
-            top: 40,
-            right: 20,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              // decoration: BoxDecoration(
-              //   color: Colors.grey[900],
-              //   borderRadius: BorderRadius.circular(20),
-              // ),
-              child: ElevatedButton(
-                onPressed: () {
-                  showMenu(
-                    context: context,
-                    position: RelativeRect.fromLTRB(
-                        MediaQuery.of(context).size.width - 150, 100, 20, 0),
-                    items: [
-                      PopupMenuItem(
-                        value: 'Doctor',
-                        child: Text(
-                          "Register as Doctor",
-                          // style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'Volunteer',
-                        child: Text(
-                          "Register as Volunteer",
-                          // style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                    // color: Colors.grey[900], // Dark background for the popup
-                    // shape: RoundedRectangleBorder(
-                    //   borderRadius: BorderRadius.circular(15),
-                    // ),
-                  ).then((value) {
-                    if (value != null) _navigateToRegistration(value);
-                  });
-                },
-                child: const Text(
-                  "Other User Type",
-                  // style: TextStyle(color: Colors.green),
-                ),
-              ),
+          ColorFiltered(
+            colorFilter:
+                ColorFilter.mode(Colors.black.withAlpha(64), BlendMode.dstATop),
+            child: Image.asset(
+              "assets/earth_network.png",
+              height: MediaQuery.of(context).size.height,
+              fit: BoxFit.fill,
             ),
           ),
+          Center(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "Crisis Connect",
+                  style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold),
+                ),
+                Text("Hope in Crisis, Help at Hand".toUpperCase()),
+                SizedBox(
+                  height: 550,
+                )
+              ],
+            ),
+          ),
+          // Positioned(
+          //   top: 40,
+          //   right: 20,
+          //   child: Container(
+          //     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          //     // decoration: BoxDecoration(
+          //     //   color: Colors.grey[900],
+          //     //   borderRadius: BorderRadius.circular(20),
+          //     // ),
+          //     child: ElevatedButton(
+          //       onPressed: () {
+          //         showMenu(
+          //           context: context,
+          //           position: RelativeRect.fromLTRB(
+          //               MediaQuery.of(context).size.width - 150, 100, 20, 0),
+          //           items: [
+          //             PopupMenuItem(
+          //               value: 'Doctor',
+          //               child: Text(
+          //                 "Register as Doctor",
+          //                 // style: TextStyle(color: Colors.white),
+          //               ),
+          //             ),
+          //             PopupMenuItem(
+          //               value: 'Volunteer',
+          //               child: Text(
+          //                 "Register as Volunteer",
+          //                 // style: TextStyle(color: Colors.white),
+          //               ),
+          //             ),
+          //           ],
+          //           // color: Colors.grey[900], // Dark background for the popup
+          //           // shape: RoundedRectangleBorder(
+          //           //   borderRadius: BorderRadius.circular(15),
+          //           // ),
+          //         ).then((value) {
+          //           if (value != null) _navigateToRegistration(value);
+          //         });
+          //       },
+          //       child: const Text(
+          //         "Other User Type",
+          //         // style: TextStyle(color: Colors.green),
+          //       ),
+          //     ),
+          //   ),
+          // ),
           Center(
             child: Padding(
               padding: const EdgeInsets.all(20),
