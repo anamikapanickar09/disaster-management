@@ -4,7 +4,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../services/pop_up.dart';
+// import '../services/pop_up.dart';
+import './about_page.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -70,8 +71,13 @@ class AppDrawer extends StatelessWidget {
                       return EditProfilePage();
                     }));
                   }),
-              DrawerItem(icon: Icons.info, text: "App Info", onTap: () {}),
-              DrawerItem(icon: Icons.help, text: "About", onTap: () {}),
+              // DrawerItem(icon: Icons.info, text: "App Info", onTap: () {}),
+              DrawerItem(icon: Icons.help, text: "About", onTap: () {
+                    Navigator.of(context)
+                        .push(MaterialPageRoute(builder: (context) {
+                      return AboutPage();
+                    }));
+                  }),
               DrawerItem(
                 icon: Icons.logout,
                 text: "Logout",
