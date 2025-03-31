@@ -6,10 +6,10 @@ import 'package:location/location.dart';
 import 'package:intl/intl.dart';
 
 class MapPage extends StatefulWidget {
-  const MapPage({super.key});
-
+  const MapPage({super.key, this.focusLocation = null});
+  final LatLng? focusLocation;
   @override
-  _MapPageState createState() => _MapPageState();
+  State<MapPage> createState() => _MapPageState();
 }
 
 class _MapPageState extends State<MapPage> {
@@ -57,7 +57,9 @@ class _MapPageState extends State<MapPage> {
   }
 
   void zoomToUserLocation() {
-    if (userLocation != null) {
+    if (widget.focusLocation != null) {
+      _mapController.move(widget.focusLocation!, 18);
+    } else if (userLocation != null) {
       _mapController.move(userLocation!, 15.0);
     }
   }

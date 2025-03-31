@@ -1,4 +1,7 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:disaster/services/firebase_notofications.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 
 Map<String, String> reverseMap = {};
@@ -25,11 +28,10 @@ Future<String> getPlaceFromCoordinates(num lat, num long) async {
 }
 
 Future<String> classifyText(String text) async {
-  var url = Uri.parse(
+  final Uri url = Uri.parse(
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent");
-  var apiKey =
-      "AIzaSyB2WCbw8GDnPTDrOx8GI3TZhV6Rr-3X89o"; // Replace with your actual GEMINI_API_KEY
-  var headers = {
+  const String apiKey = "AIzaSyB2WCbw8GDnPTDrOx8GI3TZhV6Rr-3X89o";
+  const Map<String, String> headers = {
     'Content-Type': 'application/json',
   };
   var body = jsonEncode({
@@ -37,8 +39,12 @@ Future<String> classifyText(String text) async {
       {
         "parts": [
           {
-            "text":
-                "You are given a string sent by a person who is affected by a crisis. There are 2 types of people. Doctors and Volunteers. The job given to you is to figure out to whom to send the text. REPLY IN A SINGLE WORD. \"DOCTOR\" or \"VOLUNTEER\". And if the string does not relate to anything in the context, you should say \"ERROR\". No additional info needed. Not even a period or linebreak after the word. Here is the text: '$text'"
+            "text": "You are given a string sent by a person who is affected by a crisis. "
+                "There are 2 types of people. Doctors and Volunteers. "
+                "The job given to you is to figure out to whom to send the text. "
+                "REPLY IN A SINGLE WORD. \"DOCTOR\" or \"VOLUNTEER\". "
+                "And if the string does not relate to anything in the context, you should say \"ERROR\". "
+                "No additional info needed. Not even a period or linebreak after the word. Here is the text: '$text'"
           }
         ]
       }
@@ -63,4 +69,33 @@ Future<String> classifyText(String text) async {
     return returnText;
   }
   throw Exception('Failed to load data. Status code: ${response.statusCode}');
+}
+
+void sendAlert(
+    {required String name,
+    required String userType,
+    required String comment,
+    required Position position}) async {
+  String receiver = await classifyText(comment);
+
+  await FirebaseFirestore.instance.collection('alerts').add({
+    'name': name,
+    'userType': userType,
+    'comment': comment,
+    'latitude': position.latitude,
+    'longitude': position.longitude,
+    'timestamp': FieldValue.serverTimestamp(),
+    'closed': false,
+    'committed': false,
+  });
+
+  FCMService().sendNotification(
+      topic: receiver.trim().toLowerCase(),
+      title: "Alert!",
+      body: comment,
+      accessToken: await FirebaseAuthTokenManager.getAccessToken());
+}
+
+void main() async {
+  print(await classifyText("i need water please"));
 }

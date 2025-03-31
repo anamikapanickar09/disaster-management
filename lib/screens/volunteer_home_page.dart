@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:disaster/screens/app_drawer.dart';
 import 'package:disaster/screens/send_public_updates.dart';
+import 'package:disaster/services/api_service.dart';
+import 'package:disaster/services/firebase_notofications.dart';
 import 'package:disaster/services/pop_up.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -81,16 +83,19 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      await FirebaseFirestore.instance.collection('alerts').add({
-        'name': name,
-        'userType': userType,
-        'comment': comment,
-        'latitude': position.latitude,
-        'longitude': position.longitude,
-        'timestamp': FieldValue.serverTimestamp(),
-        'closed': false,
-        'committed': false,
-      });
+      sendAlert(
+          name: name, userType: userType, comment: comment, position: position);
+
+      // await FirebaseFirestore.instance.collection('alerts').add({
+      //   'name': name,
+      //   'userType': userType,
+      //   'comment': comment,
+      //   'latitude': position.latitude,
+      //   'longitude': position.longitude,
+      //   'timestamp': FieldValue.serverTimestamp(),
+      //   'closed': false,
+      //   'committed': false,
+      // });
 
       // print("✅ Emergency alert sent successfully.");
       if (mounted) {
@@ -143,6 +148,12 @@ class _VolunteerHomePageState extends State<VolunteerHomePage> {
         'update': update,
         'timestamp': FieldValue.serverTimestamp(),
       });
+
+      FCMService().sendNotification(
+          topic: "updates",
+          title: "Message from doctor: $name",
+          body: update,
+          accessToken: await FirebaseAuthTokenManager.getAccessToken());
 
       // print("✅ Emergency alert sent successfully.");
       if (mounted) {

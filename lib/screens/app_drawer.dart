@@ -1,5 +1,6 @@
 import 'package:disaster/screens/edit_profile_page.dart';
 import 'package:disaster/screens/login_page.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -132,6 +133,12 @@ class AppDrawer extends StatelessWidget {
                                               const LoginPage()),
                                     );
                                   }
+                                  FirebaseMessaging.instance
+                                      .unsubscribeFromTopic("doctor");
+                                  FirebaseMessaging.instance
+                                      .unsubscribeFromTopic("volunteer");
+                                  FirebaseMessaging.instance
+                                      .unsubscribeFromTopic("updates");
                                   return;
                                 },
                                 style: TextButton.styleFrom(

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:disaster/screens/app_drawer.dart';
 import 'package:disaster/screens/send_public_updates.dart';
 import 'package:disaster/screens/view_updates_page.dart';
+import 'package:disaster/services/api_service.dart';
 import 'package:disaster/services/pop_up.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -82,16 +83,19 @@ class _VictimHomePageState extends State<VictimHomePage> {
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      await FirebaseFirestore.instance.collection('alerts').add({
-        'name': name,
-        'userType': userType,
-        'comment': comment,
-        'latitude': position.latitude,
-        'longitude': position.longitude,
-        'timestamp': FieldValue.serverTimestamp(),
-        'closed': false,
-        'committed': false,
-      });
+      sendAlert(
+          name: name, userType: userType, comment: comment, position: position);
+
+      // await FirebaseFirestore.instance.collection('alerts').add({
+      //   'name': name,
+      //   'userType': userType,
+      //   'comment': comment,
+      //   'latitude': position.latitude,
+      //   'longitude': position.longitude,
+      //   'timestamp': FieldValue.serverTimestamp(),
+      //   'closed': false,
+      //   'committed': false,
+      // });
 
       // print("✅ Emergency alert sent successfully.");
       if (mounted) {

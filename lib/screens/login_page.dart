@@ -1,6 +1,7 @@
 import 'package:disaster/screens/admin_home_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'register_doctor.dart';
 import 'register_victim.dart';
@@ -62,14 +63,17 @@ class _LoginPageState extends State<LoginPage> {
         if (userType == 'doctor') {
           Navigator.pushReplacement(context,
               MaterialPageRoute(builder: (context) => const DoctorHomePage()));
+          FirebaseMessaging.instance.subscribeToTopic("doctor");
         } else if (userType == 'victim') {
           Navigator.pushReplacement(context,
               MaterialPageRoute(builder: (context) => const VictimHomePage()));
+          FirebaseMessaging.instance.subscribeToTopic("updates");
         } else if (userType == 'volunteer') {
           Navigator.pushReplacement(
               context,
               MaterialPageRoute(
                   builder: (context) => const VolunteerHomePage()));
+          FirebaseMessaging.instance.subscribeToTopic("volunteer");
         } else if (userType == 'admin') {
           Navigator.pushReplacement(context,
               MaterialPageRoute(builder: (context) => const AdminHomePage()));
