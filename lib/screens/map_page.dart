@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:location/location.dart';
 import 'package:intl/intl.dart';
+import '../utils/location_utils.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key, this.focusLocation = null});
@@ -21,12 +22,44 @@ class _MapPageState extends State<MapPage> {
       "https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}";
   // String mapUrlTemplate = "https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png";
   var firebaseSubscription;
+  Set<Polygon> _mapZones = {};
 
   @override
   void initState() {
     super.initState();
     requestLocationAccess();
     fetchMapData();
+    updateMapZones();
+  }
+
+  Future<void> updateMapZones() async {
+    List<LatLng> alertLocations = await getAlertLocations();
+    Map<LatLng, int> clusters = getClusterCounts(alertLocations);
+
+    Set<Polygon> zones = {};
+
+    clusters.forEach((center, count) {
+      Color zoneColor = count > 20
+          ? Colors.red.withOpacity(0.3)
+          : count > 10
+              ? Colors.orange.withOpacity(0.3)
+              : Colors.transparent;
+
+      if (zoneColor != Colors.transparent) {
+        zones.add(
+          Polygon(
+            // polygonId: PolygonId(center.toString()),
+            points: generateCircle(center, 1), // Creates a circular polygon
+            color: zoneColor,
+            borderStrokeWidth: 0,
+          ),
+        );
+      }
+    });
+
+    setState(() {
+      _mapZones = zones;
+    });
   }
 
   Future<void> requestLocationAccess() async {
@@ -278,6 +311,7 @@ class _MapPageState extends State<MapPage> {
                   // subdomains: ['a', 'b', 'c'],
                 ),
                 MarkerLayer(markers: markers),
+                PolygonLayer(polygons: _mapZones.toList()),
               ],
             ),
           ),
