@@ -1,3 +1,5 @@
+import 'package:disaster/screens/register_doctor.dart';
+import 'package:disaster/screens/register_volunteer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -117,6 +119,16 @@ class _RegisterVictimState extends State<RegisterVictim> {
     super.dispose();
   }
 
+    void _navigateToRegistration(String userType) {
+    if (userType == 'Doctor') {
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => RegisterDoctor()));
+    } else if (userType == 'Volunteer') {
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => RegisterVolunteer()));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -130,6 +142,40 @@ class _RegisterVictimState extends State<RegisterVictim> {
         iconTheme: const IconThemeData(color: Colors.white),
         centerTitle: true,
         elevation: 0,
+        actions: [
+          IconButton(
+                onPressed: () {
+                  showMenu(
+                    context: context,
+                    position: RelativeRect.fromLTRB(
+                        MediaQuery.of(context).size.width - 150, 100, 20, 0),
+                    items: [
+                      PopupMenuItem(
+                        value: 'Doctor',
+                        child: Text(
+                          "Register as Doctor",
+                          // style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      PopupMenuItem(
+                        value: 'Volunteer',
+                        child: Text(
+                          "Register as Volunteer",
+                          // style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                    // color: Colors.grey[900], // Dark background for the popup
+                    // shape: RoundedRectangleBorder(
+                    //   borderRadius: BorderRadius.circular(15),
+                    // ),
+                  ).then((value) {
+                    if (value != null) _navigateToRegistration(value);
+                  });
+                },
+                icon: Icon(Icons.person_add_alt_1),
+              ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -167,7 +213,7 @@ class _RegisterVictimState extends State<RegisterVictim> {
                 : ElevatedButton(
                     onPressed: _register,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),

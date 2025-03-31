@@ -115,7 +115,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      // backgroundColor: Colors.black,
       body: Stack(
         children: [
           Positioned(
@@ -123,11 +123,11 @@ class _LoginPageState extends State<LoginPage> {
             right: 20,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: Colors.grey[900],
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: TextButton(
+              // decoration: BoxDecoration(
+              //   color: Colors.grey[900],
+              //   borderRadius: BorderRadius.circular(20),
+              // ),
+              child: ElevatedButton(
                 onPressed: () {
                   showMenu(
                     context: context,
@@ -138,28 +138,28 @@ class _LoginPageState extends State<LoginPage> {
                         value: 'Doctor',
                         child: Text(
                           "Register as Doctor",
-                          style: TextStyle(color: Colors.white),
+                          // style: TextStyle(color: Colors.white),
                         ),
                       ),
                       PopupMenuItem(
                         value: 'Volunteer',
                         child: Text(
                           "Register as Volunteer",
-                          style: TextStyle(color: Colors.white),
+                          // style: TextStyle(color: Colors.white),
                         ),
                       ),
                     ],
-                    color: Colors.grey[900], // Dark background for the popup
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
-                    ),
+                    // color: Colors.grey[900], // Dark background for the popup
+                    // shape: RoundedRectangleBorder(
+                    //   borderRadius: BorderRadius.circular(15),
+                    // ),
                   ).then((value) {
                     if (value != null) _navigateToRegistration(value);
                   });
                 },
                 child: const Text(
                   "Other User Type",
-                  style: TextStyle(color: Colors.green),
+                  // style: TextStyle(color: Colors.green),
                 ),
               ),
             ),
@@ -206,17 +206,17 @@ class _LoginPageState extends State<LoginPage> {
                   SizedBox(
                     width: double.infinity,
                     height: 50,
-                    child: ElevatedButton(
+                    child: FilledButton(
                       onPressed: _login,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color.fromARGB(255, 76, 175, 80),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
+                        backgroundColor: Colors.white,
+                        // shape: RoundedRectangleBorder(
+                        //   borderRadius: BorderRadius.circular(30),
+                        // ),
                       ),
                       child: const Text(
                         "LOGIN",
-                        style: TextStyle(color: Colors.white, fontSize: 18),
+                        style: TextStyle(fontSize: 18),
                       ),
                     ),
                   ),
@@ -226,7 +226,7 @@ class _LoginPageState extends State<LoginPage> {
                     children: [
                       const Text(
                         "Don't have an account?",
-                        style: TextStyle(color: Colors.white),
+                        // style: TextStyle(color: Colors.white),
                       ),
                       TextButton(
                         onPressed: () {
@@ -235,9 +235,9 @@ class _LoginPageState extends State<LoginPage> {
                               MaterialPageRoute(
                                   builder: (context) => RegisterVictim()));
                         },
-                        child: const Text(
+                        child: Text(
                           "Sign Up",
-                          style: TextStyle(color: Colors.green),
+                          style: TextStyle(color: Colors.indigo[700]),
                         ),
                       ),
                     ],
