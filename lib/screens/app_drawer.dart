@@ -39,7 +39,7 @@ class AppDrawer extends StatelessWidget {
               //   ),
               // ),
               Container(
-                height: 150,
+                height: 170,
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                 ),
@@ -53,6 +53,11 @@ class AppDrawer extends StatelessWidget {
                       radius: 55,
                     ),
                     Center(child: Text(name, style: TextStyle(fontSize: 18))),
+                    if (userData["userType"] != "victim")
+                      Center(
+                          child: Text(
+                              userData["userType"].toString().toUpperCase(),
+                              style: TextStyle(fontSize: 14))),
                   ],
                 ),
               ),
@@ -72,7 +77,10 @@ class AppDrawer extends StatelessWidget {
                     }));
                   }),
               // DrawerItem(icon: Icons.info, text: "App Info", onTap: () {}),
-              DrawerItem(icon: Icons.help, text: "About", onTap: () {
+              DrawerItem(
+                  icon: Icons.help,
+                  text: "About",
+                  onTap: () {
                     Navigator.of(context)
                         .push(MaterialPageRoute(builder: (context) {
                       return AboutPage();
