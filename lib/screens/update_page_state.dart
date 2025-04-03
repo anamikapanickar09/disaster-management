@@ -183,7 +183,7 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    "${(c['userType'][0].toUpperCase() + c['userType'].substring(1))}: ${alert['name']}",
+                                    "${(c['userType'][0].toUpperCase() + c['userType'].substring(1))}: ${c['name']}",
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
