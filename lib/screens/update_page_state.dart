@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-// import '../services/api_service.dart';
+import '../services/api_service.dart';
 import '../services/pop_up.dart';
 
 class UpdatePage extends StatefulWidget {
@@ -121,22 +121,22 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              Text(
-                                  "${alert['latitude']}, ${alert['longitude']}"),
-                              // FutureBuilder<String>(
-                              //   future: getPlaceFromCoordinates(alert['latitude'], alert['longitude']),
-                              //   builder: (context, snapshot) {
-                              //     if (snapshot.connectionState == ConnectionState.waiting) {
-                              //       return Text('Loading place...');
-                              //     } else if (snapshot.hasError) {
-                              //       return Text('Error: ${snapshot.error}');
-                              //     } else if (snapshot.hasData) {
-                              //       return Text(snapshot.data!); // !.split(', ').join(',\n'));
-                              //     } else {
-                              //       return Container();
-                              //     }
-                              //   },
-                              // ),
+                              // Text(
+                              //     "${alert['latitude']}, ${alert['longitude']}"),
+                              FutureBuilder<String>(
+                                future: getPlaceFromCoordinates(alert['latitude'], alert['longitude']),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                    return Text('Loading place...');
+                                  } else if (snapshot.hasError) {
+                                    return Text('Error: ${snapshot.error}');
+                                  } else if (snapshot.hasData) {
+                                    return Text(snapshot.data!); // !.split(', ').join(',\n'));
+                                  } else {
+                                    return Container();
+                                  }
+                                },
+                              ),
                             ],
                           ),
                         ),
@@ -183,7 +183,7 @@ class _UpdateAlertsState extends State<UpdateAlerts> {
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    "${(c['userType'][0].toUpperCase() + c['userType'].substring(1))}: ${c['name']}",
+                                    "${(c['userType'][0].toUpperCase() + c['userType'].substring(1))}: ${c['userName']}",
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
@@ -368,21 +368,21 @@ class UpdateCamps extends StatelessWidget {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              Text("${camp['latitude']}, ${camp['longitude']}"),
-                              // FutureBuilder<String>(
-                              //   future: getPlaceFromCoordinates(alert['latitude'], alert['longitude']),
-                              //   builder: (context, snapshot) {
-                              //     if (snapshot.connectionState == ConnectionState.waiting) {
-                              //       return Text('Loading place...');
-                              //     } else if (snapshot.hasError) {
-                              //       return Text('Error: ${snapshot.error}');
-                              //     } else if (snapshot.hasData) {
-                              //       return Text(snapshot.data!); // !.split(', ').join(',\n'));
-                              //     } else {
-                              //       return Container();
-                              //     }
-                              //   },
-                              // ),
+                              // Text("${camp['latitude']}, ${camp['longitude']}"),
+                              FutureBuilder<String>(
+                                future: getPlaceFromCoordinates(camp['latitude'], camp['longitude']),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                    return Text('Loading place...');
+                                  } else if (snapshot.hasError) {
+                                    return Text('Error: ${snapshot.error}');
+                                  } else if (snapshot.hasData) {
+                                    return Text(snapshot.data!); // !.split(', ').join(',\n'));
+                                  } else {
+                                    return Container();
+                                  }
+                                },
+                              ),
                             ],
                           ),
                         ),
